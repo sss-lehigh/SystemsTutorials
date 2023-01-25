@@ -77,7 +77,7 @@ __global__ void saxpy(const float alpha, const float* __restrict__ a, const floa
                 float reg_a;
                 float reg_b;
 
-                for(int j = 0; j < 4; j++) {
+                for(int j = 0; j < 4; ++j) {
                     if(j + tidx + i * 256 < size) {
                         reg_a = a_block[j + tidx + i * 256];
                         reg_b = b_block[j + tidx + i * 256];
@@ -160,7 +160,7 @@ int main() {
     start = std::chrono::high_resolution_clock::now();
     tbb::parallel_for(tbb::blocked_range<int>(0, size), 
                       [&](tbb::blocked_range<int> r) {
-        for(int i = r.begin(); i < r.end(); i++) {
+        for(int i = r.begin(); i < r.end(); ++i) {
             c2[i] = alpha * a[i] + b[i];
         }  
     });
