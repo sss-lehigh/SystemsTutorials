@@ -260,7 +260,7 @@ int main() {
 // size is the size of the vectors
 // __restrict__ tells the compiler a, b, and c will not
 // alias to each other (as in a != b, b != c, and a != c
-__global__ void saxpy(const float alpha, const float* __restrict__ a, const float* __restrict__ b, float* __restrict__ c, int size); {
+__global__ void saxpy(const float alpha, const float* __restrict__ a, const float* __restrict__ b, float* __restrict__ c, int size) {
 
     // each block handles 1024 elements
     // each block has 64 threads
