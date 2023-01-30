@@ -16,93 +16,18 @@ using vector = thrust::host_vector<T>;
 // size is the size of the vectors
 // __restrict__ tells the compiler a, b, and c will not
 // alias to each other (as in a != b, b != c, and a != c
-__global__ void saxpy(const float alpha, const float* __restrict__ a, const float* __restrict__ b, float* __restrict__ c, int size) {
-
-    // each block handles 1024 elements
-    // each block has 64 threads
-    // each thread in a block handles 4 of those elements
-    // we iterate 4 times to handle the 1024 elements
-    constexpr int elements_per_thread = 4;
-    
-    // threadIdx.x is the location within the grid
-    // blockIdx.x is the location of the block
-    // blockDim.x is the dimension of the block (threads per block)
-    // we know blockDim.x = 64 so we substitute 64 in
-    int tidx = threadIdx.x; 
-    
-    // we will block the vector addition with 4 elements per each thread
-   
-    int bidx = blockIdx.x;
-
-    const float* a_block = a + bidx * 1024;
-    const float* b_block = b + bidx * 1024;
-    float* c_block = c + bidx * 1024;
-
-    // if we know we are in bounds of the vector or if the vector size is evenly divisible by 1024
-    if(bidx < size / 1024 || (size + 1023) / 1024 == size / 1024) {
-
-        // we process 256 floating point calculations per loop
-        // float 512 floats loaded and 256 stored
-        #pragma unroll
-        for(int i = 0; i < 1024 / 64 / elements_per_thread; ++i) {
-            float4 reg_a = *(reinterpret_cast<const float4*>(a_block) + tidx + i * 64);
-            float4 reg_b = *(reinterpret_cast<const float4*>(b_block) + tidx + i * 64);
-            
-            reg_b.w += alpha * reg_a.w;
-            reg_b.x += alpha * reg_a.x;
-            reg_b.y += alpha * reg_a.y;
-            reg_b.z += alpha * reg_a.z;
-
-            *(reinterpret_cast<float4*>(c_block) + tidx + i * 64) = reg_b;
-        }
-    } else {
-        #pragma unroll
-        for(int i = 0; i < 1024 / 64 / elements_per_thread; ++i) {
-
-            // if the loads and stores are all in bounds proceed as normal
-            if(bidx + tidx + i * 256 + 3 < size) {
-                float4 reg_a = *(reinterpret_cast<const float4*>(a_block) + tidx + i * 64);
-                float4 reg_b = *(reinterpret_cast<const float4*>(b_block) + tidx + i * 64);
-                
-                reg_b.w += alpha * reg_a.w;
-                reg_b.x += alpha * reg_a.x;
-                reg_b.y += alpha * reg_a.y;
-                reg_b.z += alpha * reg_a.z;
-
-                *(reinterpret_cast<float4*>(c_block) + tidx + i * 64) = reg_b;
-            } else if(bidx + tidx + i * 256 < size) {
-
-                // perform each individually
-
-                float reg_a;
-                float reg_b;
-
-                for(int j = 0; j < 4; ++j) {
-                    if(j + tidx + i * 256 < size) {
-                        reg_a = a_block[j + tidx + i * 256];
-                        reg_b = b_block[j + tidx + i * 256];
-                        
-                        reg_b += alpha * reg_a;
-
-                        c_block[j + tidx + i * 256] = reg_b;
-                    }
-                }
-            }
-
-        }
-    }
-}
+__global__ void saxpy(const float alpha, const float* __restrict__ a, const float* __restrict__ b, float* __restrict__ c, int size); 
 
 int main() {
 
     // Lets add and scale two vectors together:
     // c = alpha * a + b
-    //
 
+    // this is the size of our problem 
     const int size = 1000000;
 
 
-    // we will create size element vectors
+    // we will create size element vectors with entries of zero
     vector<float> a(size, 0);
     vector<float> b(size, 0);
     vector<float> c(size, 0);
@@ -116,6 +41,10 @@ int main() {
     // we set alpha to 1
     float alpha = 1.0f;
 
+    // SEQUENTIAL EXECUTION
+    // -------------------------------------------------------------------------------------------------------
+
+    // this gets the current time
     auto start = std::chrono::high_resolution_clock::now();
    
     // we add together using a lambda from a.cbegin() to a.cend()
@@ -127,14 +56,20 @@ int main() {
     
     auto end = std::chrono::high_resolution_clock::now();
     
+    // we compute the number of seconds elapsed
     double seq_time = std::chrono::duration<double>(end - start).count();
 
+    // C++ STANDARD PARALLEL EXECUTION
+    // -------------------------------------------------------------------------------------------------------
+
+    // we create another vector to output to
     vector<float> c2(size, 0);
 
     start = std::chrono::high_resolution_clock::now();
 
     // lets compare to a parallel execution that can be parallelized or vectorized
     // in any way the compiler desires
+    // this does the transformation in parallel instead of sequential by specifying par_unseq (parallel unsequenced)
     std::transform(std::execution::par_unseq, a.begin(), a.end(), b.begin(), c2.begin(), [alpha](const auto& a, const auto& b) {
         return alpha * a + b;
     });
@@ -143,6 +78,7 @@ int main() {
 
     double par_time = std::chrono::duration<double>(end - start).count();
 
+    // we double check if we have computed accurately within a 1e-5 tolerance
     bool fail = false;
     for(int i = 0; i < size; ++i) {
         if(std::abs(c[i] - c2[i]) > std::abs(c[i] * 1e-5)) {
@@ -154,15 +90,19 @@ int main() {
 
     if(fail) return 1;
 
-    // lets try tbb parallel for
-    //
+    // INTEL THREAD BUILDING BLOCKS PARALLEL EXECUTION
+    // -------------------------------------------------------------------------------------------------------
 
     start = std::chrono::high_resolution_clock::now();
-    tbb::parallel_for(tbb::blocked_range<int>(0, size), 
-                      [&](tbb::blocked_range<int> r) {
+
+    // this parallelizes a for loop by asigning each thread of execution a range from r.begin() to r.end()
+    // to compute over
+    tbb::parallel_for(tbb::blocked_range<int>(0, size), [&](tbb::blocked_range<int> r) {
+
         for(int i = r.begin(); i < r.end(); ++i) {
             c2[i] = alpha * a[i] + b[i];
         }  
+
     });
     end = std::chrono::high_resolution_clock::now();
     
@@ -176,17 +116,27 @@ int main() {
         }
     }
 
+    // THRUST CUDA GPU PARALLEL EXECUTION
+    // -------------------------------------------------------------------------------------------------------
+
+    // we create device vectors which are created in GPU memory
     thrust::device_vector<float> c_kern(size, 0);
 
     start = std::chrono::high_resolution_clock::now();
-    
+   
+    // these device vectors are initialized with data from the begining of the corresponding 
+    // host (CPU) vector to the end of the vector
     thrust::device_vector<float> a_kern(a.begin(), a.end());
     thrust::device_vector<float> b_kern(b.begin(), b.end());
 
+    // this executes the same transform operation as std::transform but on the GPU or CPU. We mark the lambda with __host__ __device__
+    // this enables us to execute this lambda on both the host (CPU) and device (GPU)
     thrust::transform(a_kern.begin(), a_kern.end(), b_kern.begin(), c_kern.begin(), [=] __host__ __device__ (const float& a, const float& b) {
         return alpha * a + b;        
     });
 
+    // we copy the results back from the GPU to the CPU into c2 from the begining to end
+    // we start copying from the begining of c_kern
     thrust::copy(c2.begin(), c2.end(), c_kern.begin());
     
     end = std::chrono::high_resolution_clock::now();
@@ -203,13 +153,18 @@ int main() {
 
     if(fail) return 1;
 
+    // MANUAL CUDA PARALLEL EXECUTION
+    // -------------------------------------------------------------------------------------------------------
+
     float* c_kern2;
     float* a_kern2;
     float* b_kern2;
 
-    // malloc similar to c malloc but takes
-    // pointer to where you write what you allocated
+    // malloc similar to c malloc but takes pointer to where you write what you allocated.
+    // This is allocating the variable a_kern2 of sizeof(float) * size bytes
+    // on the GPU.
     cudaError_t cudaError = cudaMalloc(&a_kern2, sizeof(float) * size);
+    // we must check if an error occured
     if(cudaError != cudaSuccess) {
         std::cerr << "cuda failure" << std::endl;
         return 2;
@@ -247,11 +202,14 @@ int main() {
     saxpy<<<(size + 1023) / 1024, 64>>>(alpha, a_kern2, b_kern2, c_kern2, size);
    
     cudaError = cudaDeviceSynchronize(); // synchronize with GPU
+    // this synchronization must occur or we will be unable to accurately get results from
+    // the GPU
     if(cudaError != cudaSuccess) {
         std::cerr << "cuda failure" << std::endl;
         return 2;
     }
 
+    // we copy data back into c2 by getting the underlying pointer with c2.data()
     cudaError = cudaMemcpy(c2.data(), c_kern2, sizeof(float) * size, cudaMemcpyDeviceToHost);
     if(cudaError != cudaSuccess) {
         std::cerr << "cuda failure" << std::endl;
@@ -262,6 +220,7 @@ int main() {
     
     double cuda_time = std::chrono::duration<double>(end - start).count();
 
+    // we must free our allocated memory on the GPU with cudaFree
     cudaError = cudaFree(a_kern2);
     if(cudaError != cudaSuccess) {
         std::cerr << "cuda failure" << std::endl;
@@ -296,3 +255,88 @@ int main() {
     std::cout << "Speedup of best:\t\t\t\t" << seq_time / best << std::endl;
     return 0;
 }
+
+// kernel function to perform vector c = alpha * a + b
+// size is the size of the vectors
+// __restrict__ tells the compiler a, b, and c will not
+// alias to each other (as in a != b, b != c, and a != c
+__global__ void saxpy(const float alpha, const float* __restrict__ a, const float* __restrict__ b, float* __restrict__ c, int size); {
+
+    // each block handles 1024 elements
+    // each block has 64 threads
+    // each thread in a block handles 4 of those elements
+    // we iterate 4 times to handle the 1024 elements
+    constexpr int elements_per_thread = 4;
+    
+    // threadIdx.x is the location within the grid
+    // blockIdx.x is the location of the block
+    // blockDim.x is the dimension of the block (threads per block)
+    // we know blockDim.x = 64 so we substitute 64 in
+    int tidx = threadIdx.x; 
+    
+    // we will block the vector addition with 4 elements per each thread
+   
+    int bidx = blockIdx.x;
+
+    const float* a_block = a + bidx * 1024;
+    const float* b_block = b + bidx * 1024;
+    float* c_block = c + bidx * 1024;
+
+    // if we know we are in bounds of the vector or if the vector size is evenly divisible by 1024
+    if(bidx < size / 1024 || (size + 1023) / 1024 == size / 1024) {
+
+        // we process 256 floating point calculations per loop
+        // float 512 floats loaded and 256 stored
+        // this pragma tells the compiler to unroll the loop
+        #pragma unroll
+        for(int i = 0; i < 1024 / 64 / elements_per_thread; ++i) {
+            float4 reg_a = *(reinterpret_cast<const float4*>(a_block) + tidx + i * 64);
+            float4 reg_b = *(reinterpret_cast<const float4*>(b_block) + tidx + i * 64);
+            
+            reg_b.w += alpha * reg_a.w;
+            reg_b.x += alpha * reg_a.x;
+            reg_b.y += alpha * reg_a.y;
+            reg_b.z += alpha * reg_a.z;
+
+            *(reinterpret_cast<float4*>(c_block) + tidx + i * 64) = reg_b;
+        }
+    } else {
+        // this tells the compiler to unroll this loop
+        #pragma unroll
+        for(int i = 0; i < 1024 / 64 / elements_per_thread; ++i) {
+
+            // if the loads and stores are all in bounds proceed as normal
+            if(bidx + tidx + i * 256 + 3 < size) {
+                float4 reg_a = *(reinterpret_cast<const float4*>(a_block) + tidx + i * 64);
+                float4 reg_b = *(reinterpret_cast<const float4*>(b_block) + tidx + i * 64);
+                
+                reg_b.w += alpha * reg_a.w;
+                reg_b.x += alpha * reg_a.x;
+                reg_b.y += alpha * reg_a.y;
+                reg_b.z += alpha * reg_a.z;
+
+                *(reinterpret_cast<float4*>(c_block) + tidx + i * 64) = reg_b;
+            } else if(bidx + tidx + i * 256 < size) { // we are partially in bounds
+
+                // perform each individually
+
+                float reg_a;
+                float reg_b;
+
+                for(int j = 0; j < 4; ++j) {
+                    if(j + tidx + i * 256 < size) {
+                        reg_a = a_block[j + tidx + i * 256];
+                        reg_b = b_block[j + tidx + i * 256];
+                        
+                        reg_b += alpha * reg_a;
+
+                        c_block[j + tidx + i * 256] = reg_b;
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+
