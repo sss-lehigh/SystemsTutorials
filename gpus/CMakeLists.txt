@@ -21,3 +21,8 @@ find_package(TBB REQUIRED)
 add_executable(example1_using_cpp example1/example1_using_cpp.cu)
 target_link_libraries(example1_using_cpp PUBLIC TBB::tbb)
 target_compile_options(example1_using_cpp PUBLIC "--expt-extended-lambda")
+
+add_executable(example2_using_cpp example2/example2.cu)
+target_link_libraries(example2_using_cpp PUBLIC TBB::tbb)
+target_compile_options(example2_using_cpp PUBLIC "--expt-extended-lambda")
+
