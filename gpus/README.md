@@ -13,7 +13,7 @@ This tutorial uses CUDA and TBB to demonstrate how to use GPUs and what it means
 
 ## Compiling
 
-You must start by installing cmake and conan.
+You must start by installing cmake, conan, and [CUDA](https://developer.nvidia.com/cuda-downloads) 11 or greater.
 
 - cmake can be installed from [cmake.org](https://cmake.org/download/)
 - conan can be installed from [pip](https://pip.pypa.io/en/stable/installation/#supported-methods) or 
