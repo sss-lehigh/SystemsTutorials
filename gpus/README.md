@@ -7,7 +7,7 @@ This tutorial uses CUDA and TBB to demonstrate how to use GPUs and what it means
 - example1
     - example of how to write a parallel vector `z = a * x + y` on both CPUs and GPUs
     - compiles to example1\_saxpy
--example2
+- example2
     - example of how to write a parallel dot product `a = x dot y` on both CPUs and GPUs
     - compiles to example2\_dot
 
