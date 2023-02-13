@@ -64,8 +64,7 @@ void BST::printInOrder() {
 nodeptr BST::insert(int key) {
     // if there is no root, insert the new node as the root
     if (!root) {
-        Node* node = new Node(key);
-        root = node;
+        root = new Node(key);
         return root;
     }
 

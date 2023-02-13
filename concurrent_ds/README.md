@@ -5,27 +5,51 @@ This repo is meant to serve as a tutorial to learn how to implement concurrent d
 
 ## Description
 
-An in-depth paragraph about your project and overview of use.
+TODO: An in-depth paragraph about your project and overview of use.
 
 ## Getting Started
 
 ### Dependencies
 
+TODO:
 * Describe any prerequisites, libraries, OS version, etc., needed before installing program.
 * ex. Windows 10
 
 ### Installing
 
+TODO:
 * How/where to download your program
 * Any modifications needed to be made to files/folders
 
 ### Executing program
 
+TODO:
 * How to run the program
 * Step-by-step bullets
 ```
 code blocks for commands
 ```
+
+## Tutorial
+
+### Hand over hand locking
+
+1. Open node.h and add a mutex field. This enables fine-grained locking at the node-level via mutexes:
+```c++
+public:
+    int key;
+    nodeptr left;
+    nodeptr right;
+    mutex mtx;
+```
+
+2. Add in sentinel node to the beginning (I chose to make the left pointer NULL and right pointer point to the "true root" as I will refer to it.)
+
+3. Modify the insert method to support concurrently inserting when the root is NULL. Add insertRoot()
+
+3. Add locking and unlocking of parent and curr
+
+4. Create addSentintels() method
 
 ## Help
 
