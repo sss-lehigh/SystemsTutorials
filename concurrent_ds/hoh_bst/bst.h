@@ -9,6 +9,7 @@
 
 // NOTE: alternatively could add a "type" field to the node to allow for negative keys
 #define SENTINEL -1
+#define SENTINEL_BEG -2
 
 #ifndef BST_H
 #define BST_H
@@ -23,8 +24,8 @@ public:
     BST();
     void printLevelOrder();
     void printInOrder();
-    nodeptr insert(int key);
-    nodeptr remove(int key);
+    bool insert(int key);
+    bool remove(int key);
     bool contains(int key);
 };
 

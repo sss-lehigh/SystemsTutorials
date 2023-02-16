@@ -48,26 +48,30 @@ bool BST::insertRoot(int key) {
  * @param key to be inserted
  * @return nodeptr - NULL if present else root
  */
-nodeptr BST::insert(int key) {
+bool BST::insert(int key) {
     // if there is no true root, insert the new node as the root
-    if (!root->right) {
-        if (insertRoot(key)) {
-            return root;
-        }
-    }
 
-    cout << "locking sentinel and root" << endl;
+    // if (!root->right) {
+    //     if (insertRoot(key)) {
+    //         return root;
+    //     }
+    // }
+
     nodeptr parent = root;
     parent->mtx.lock();
+
+    if (!parent->right) {
+        Node* trueRoot = new Node(key);
+        addSentinels(trueRoot);
+        root->right = trueRoot;
+        return root;
+    }
+
     nodeptr curr = parent->right; // the "true root"
     curr->mtx.lock();
 
-    cout << "curr->key is " << curr->key << endl;
-    cout << "key is " << key << endl;
-
     // find the key, and it's parent
     while (curr->key != SENTINEL) {
-        cout << "HoH" << endl;
         if (curr->key > key) {
             parent->mtx.unlock();
             parent = curr;
@@ -81,14 +85,11 @@ nodeptr BST::insert(int key) {
         }
         // key is already present
         else {
-            cout << "somehow I am here ..." << endl;
             parent->mtx.unlock();
             curr->mtx.unlock();
             return NULL;
         }
-            
     }
-    cout << "here lolz" << endl;
 
     // curr is now the sentinel that we want to replace with the new node
     curr->key = key;
@@ -103,44 +104,55 @@ nodeptr BST::insert(int key) {
 }
 
 // return the root if success, NULL if root is null / key not present
-nodeptr BST::remove(int key) {
-    nodeptr prev = NULL;
-    nodeptr curr = root;
+bool BST::remove(int key) {
+    nodeptr prev = root;
+    prev->mtx.lock();
+    if (!prev->right) {
+        prev->mtx.unlock();
+        return false;
+    }
+    nodeptr curr = prev->right;
+    curr->mtx.lock();
 
-    if (root == NULL)
-        return root;
-
-    while (curr) {
+    // traverse to the node
+    while (curr->key != SENTINEL) {
         if (curr->key > key) {
+            prev->mtx.unlock();
             prev = curr;
             curr = curr->left;
+            curr->mtx.lock();
         }
         else if (curr->key < key) {
+            prev->mtx.unlock();
             prev = curr;
             curr = curr->right;
+            curr->mtx.lock();
         } else
             break;
     }
 
-    // didn't find the node -> return null
-    if (curr == NULL)
-        return NULL;
+    // didn't find the node
+    // TODO: could it be SENTINEL_BEG possibly ?
+    if (curr->key == SENTINEL)
+        return false;
 
     // at most one child (0-1 children)
-    if (curr->left == NULL || curr->right == NULL) {
-        // replaces node to be deleted
+    if (curr->left->key == SENTINEL || curr->right->key == SENTINEL) {
+        // replaces node to be deleted (with l/r child or NULL)
         nodeptr newCurr;
 
         // check if the left child exists, set newCurr accordingly
-        if (curr->left == NULL)
+        if (curr->left->key == SENTINEL)
             newCurr = curr->right;
         else
             newCurr = curr->left;
 
         // check if we are deleting the root
-        if (prev == NULL) {
-            root = newCurr;
-            return root;
+        if (prev->key == SENTINEL_BEG) {
+            root->right = newCurr;
+            prev->mtx.unlock();
+            curr->mtx.unlock();
+            return true;
         }
 
         // reset prev accordingly
@@ -148,27 +160,28 @@ nodeptr BST::remove(int key) {
             prev->left = newCurr;
         else
             prev->right = newCurr;
-
-        // free memory of curr
-        delete curr;
-
     }
     // two children
     else {
         nodeptr p = NULL;
         nodeptr temp;
 
+        // locking here --> at most, one (additional) lock held at a time 
         // compute in-order successor
         temp = curr->right;
-        while (temp->left) {
+        temp->mtx.lock();
+        while (temp->left->key != SENTINEL) {
+            temp->mtx.unlock();
             p = temp;
             temp = temp->left;
+            temp->mtx.lock();
         }
 
         // p's left child is the in-order successor
         // if temp has a right subtree, set it as p's left-subtree
         if (p != NULL)
             p->left = temp->right;
+            
         // in-order successor is curr's right ptr
         // if temp has a right subtree, set it as curr's right-subtree
         else
@@ -176,25 +189,41 @@ nodeptr BST::remove(int key) {
 
         // change the data in which curr points to
         curr->key = temp->key;
-        // delete temp which points to the node whose data we moved to the "true" node to be deleted
-        delete temp;
+
+        temp->mtx.unlock();
     }
-    return root;
+    prev->mtx.unlock();
+    curr->mtx.unlock();
+    return true;;
 }
 
 bool BST::contains(int key) {
-    if (root == NULL)
+    if (!root->right)
         return false;
 
-    nodeptr curr = root;
-    while (curr) {
-        if (curr->key > key)
+    nodeptr prev = root;
+    prev->mtx.lock();
+    nodeptr curr = prev->right;
+    curr->mtx.lock();
+    while (curr->key != SENTINEL) {
+        if (curr->key > key) {
+            prev->mtx.unlock();
+            prev = curr;
             curr = curr->left;
-        else if (curr->key < key)
+            curr->mtx.lock();
+        } else if (curr->key < key) {
+            prev->mtx.unlock();
+            prev = curr;
             curr = curr->right;
-        else
+            curr->mtx.lock();
+        } else {
+            prev->mtx.unlock();
+            curr->mtx.unlock();
             return true;
+        }     
     }
+    prev->mtx.unlock();
+    curr->mtx.unlock();
     return false;
 }
  

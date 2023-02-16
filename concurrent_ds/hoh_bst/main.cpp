@@ -8,6 +8,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <atomic>
+#include <chrono>
+#include <thread>
 #include "bst.h"
 
 #ifndef OPS_BETWEEN_TIME_CHECKS
@@ -24,6 +26,7 @@ struct {
     int inserts;
     int removes;
     int contains;
+    int size;
 } cfg;
 
 struct {
@@ -45,18 +48,13 @@ struct {
     atomic<int> running;
 } info;
 
-/**
- * GLOBALS
- * 
- */
-
 // the tree
 BST* tree;
 
 void insert(BST* tree, int key, int tid) {
     printf("Inserting: %i\n", key);
-    Node* ret = tree->insert(key);
-    if (ret == NULL) {
+    bool ret = tree->insert(key);
+    if (!ret) {
         printf("   Key %i already inserted.\n", key);
     } else {
         info.num_insert.at(tid) += 1;
@@ -67,8 +65,8 @@ void insert(BST* tree, int key, int tid) {
 
 void remove(BST* tree, int key, int tid) {
     printf("\nRemoving: %i\n", key);
-    Node* ret = tree->remove(key);
-    if (ret == NULL) {
+    bool ret = tree->remove(key);
+    if (!ret) {
         printf("   Key %i not present in structure.\n", key);
     } else {
         info.num_remove.at(tid) += 1;
@@ -90,6 +88,18 @@ void contains(BST* tree, int key, int tid) {
 // TODO: implement this
 void prefill() {
 
+    // Providing a seed value
+	//srand((unsigned) time(NULL));
+
+    int count = 0;
+    while (count < 10) {
+        count++;
+        // Get a random number
+	    int random = 1 + (rand() % 100);
+
+        // Print the random number
+	    cout<<random<<endl;
+    }
 }
 
 void *thread_timed(void *_id) {
@@ -116,6 +126,7 @@ void *thread_timed(void *_id) {
         // TODO: DO WORK, i.e., perform operations per desired workload
 
     }
+    pthread_exit(NULL);
 }
 
 void trial() {
@@ -178,35 +189,32 @@ void trial() {
     for (int i = 0; i < cfg.threads; ++i) {
         delete threads[i];
     }
-
-    //// randomness
-    // BST* tree = new BST();
-    // int tid = 0;
-    
-    // insert(tree, 50, tid);
-    // insert(tree, 40, tid);
-    // insert(tree, 60, tid);
-    // insert(tree, 60, tid);
-    // insert(tree, 70, tid);
-    // insert(tree, 10, tid);
-    // insert(tree, 80, tid);
-    // insert(tree, 20, tid);
-    // insert(tree, 55, tid);
-    
-    // printf("\nLevel Order:\n");
-    // tree->printLevelOrder();
-
-    // contains(tree, 60, tid);
-    // contains(tree, 57, tid);
-
-    // remove(tree, 60, tid);
-    // contains(tree, 60, tid);
-    // remove(tree, 45, tid);
-    
-    // printf("\nLevel Order:\n");
-    // tree->printLevelOrder();
 }
 
+void dummy_trial(int tid) {
+    insert(tree, 50, tid);
+    insert(tree, 40, tid);
+    insert(tree, 60, tid);
+    insert(tree, 60, tid);
+    insert(tree, 70, tid);
+    insert(tree, 10, tid);
+    insert(tree, 80, tid);
+    insert(tree, 20, tid);
+    insert(tree, 55, tid);
+    
+    printf("\nLevel Order:\n");
+    tree->printLevelOrder();
+
+    contains(tree, 60, tid);
+    contains(tree, 57, tid);
+
+    remove(tree, 60, tid);
+    contains(tree, 60, tid);
+    remove(tree, 45, tid);
+    
+    printf("\nLevel Order:\n");
+    tree->printLevelOrder();
+}
 
 void usage() {
     std::cout
@@ -220,13 +228,14 @@ void usage() {
 bool parseargs(int argc, char** argv) {
     // parse the command-line options
     int opt;
-    while ((opt = getopt(argc, argv, "t:s:i:r:c:h")) != -1) {
+    while ((opt = getopt(argc, argv, "t:s:i:r:c:n:h")) != -1) {
         switch (opt) {
           case 't': cfg.threads = atoi(optarg); break;
           case 's': cfg.seconds = atoi(optarg); break;
           case 'i': cfg.inserts = atoi(optarg); break;
           case 'r': cfg.removes = atoi(optarg); break;
           case 'c': cfg.contains = atoi(optarg); break;
+          case 'n': cfg.size = atoi(optarg); break;
           case 'h': usage(); exit(0); break;
           default: return false; break;
         }
@@ -267,7 +276,13 @@ int main(int argc, char *argv[]) {
         info.num_contains.push_back(0);
     }
  
-    trial();
+    prefill();
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    cout << endl << "new one" << endl;
+    prefill();
+    //trial();
+
+    //dummy_trial(0);
 
     int num_inserts = 0;
     int num_removes = 0;
