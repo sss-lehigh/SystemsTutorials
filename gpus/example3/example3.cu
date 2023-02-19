@@ -63,6 +63,7 @@ int main() {
 
     std::cout << std::chrono::duration<double>(end - start).count() << std::endl;
 
+    // now we parallelize the map reduce
     start = std::chrono::high_resolution_clock::now();
 
     auto result2 = std::transform_reduce(std::execution::par_unseq, data.begin(), data.end(), std::map<city_t, float>{}, [](const std::map<city_t, float>& a, const std::map<city_t, float>& b) {
@@ -91,6 +92,9 @@ int main() {
 
     std::cout << std::chrono::duration<double>(end - start).count() << std::endl;
 
+    // lets compare to thrust
+    // CUDA does not have a map type so we must do something else
+    
     thrust::device_vector<pair<city_t, float>> data_d(data.size());
     
     thrust::device_vector<city_t> key_d(data.size());
@@ -106,12 +110,12 @@ int main() {
 
     thrust::copy(data.begin(), data.end(), data_d.begin());
 
+    // first we sort our data by city
     thrust::sort(data_d.begin(), data_d.end(), [] __host__ __device__ (pair<city_t, float> a, pair<city_t, float> b) {
                 return a.first < b.first; 
             });
 
-    // now we unzip the data
-
+    // now we unzip the data into keys and values (city as the key, revenue as the value)
     thrust::transform(data_d.begin(), data_d.end(), key_d.begin(), [] __host__ __device__ (pair<city_t, float> a) {
                 return a.first;
             });
@@ -121,7 +125,7 @@ int main() {
             });
 
     // now we reduce by key
-
+    // note that reduce by key requires the keys and values to be sorted and will reduce consecutive ranges where the keys are equal
     thrust::reduce_by_key(key_d.begin(), key_d.end(), value_d.begin(), output_key_d.begin(), output_value_d.begin(), [] __host__ __device__(city_t a, city_t b) { return a == b; }, thrust::plus<float>());
 
     // now we copy back
