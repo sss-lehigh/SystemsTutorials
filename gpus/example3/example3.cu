@@ -30,7 +30,7 @@ int main() {
     vector<pair<city_t, float>> data;
 
     for(int i = 0; i < size; ++i) {
-        data.push_back({rand() % num_cities, rand() / 100.0f});
+        data.push_back({static_cast<unsigned>(rand() % num_cities), rand() / 100.0f});
     }
 
     // one way we can do this is to perform a map reduce
