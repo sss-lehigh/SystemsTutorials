@@ -199,7 +199,12 @@ int main() {
     }
 
     // asynchronous launch of GPU with x blocks and y threads per block
-    saxpy<<<(size + 1023) / 1024, 64>>>(alpha, a_kern2, b_kern2, c_kern2, size);
+    // note that we are setting the number of blocks to (size + 1023) / 1024
+    // the number of threads per block is 64 and each block will handle 1024 elements
+    // (size + 1023) / 1024 is an approach to calculating the ceiling of size / 1024.0
+    // by doing this we can handle cases where 1024 does not evenly divide the size of
+    // the vectors in our saxpy
+    saxpy<<<(size + 1023) / 1024, 64 >>>(alpha, a_kern2, b_kern2, c_kern2, size);
    
     cudaError = cudaDeviceSynchronize(); // synchronize with GPU
     // this synchronization must occur or we will be unable to accurately get results from
