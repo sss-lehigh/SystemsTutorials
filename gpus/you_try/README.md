@@ -19,3 +19,12 @@ The following image demonstrates how this works:
 
 Notice how increasing points gets a better approximation.
 
+## Output Programs
+
+My solution will be output at the executable `solution` in your build directory 
+and can be looked at in the solution folder.
+
+Your code will be output as `your_solution`. Compare the initial runtimes of `your_solution`
+and `solution` to see how much performance you can gain by parallelizing this problem on
+the GPU.
+
