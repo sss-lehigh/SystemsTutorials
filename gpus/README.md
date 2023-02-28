@@ -4,12 +4,21 @@ This tutorial uses CUDA and TBB to demonstrate how to use GPUs and what it means
 
 ## Examples
 
+- system\_example
+    - example code that can find edges in an image and output the resulting image
+    - compiles to image\_process\_cpu and image\_process\_gpu
 - example1
     - example of how to write a parallel vector `z = a * x + y` on both CPUs and GPUs
     - compiles to example1\_saxpy
 - example2
     - example of how to write a parallel dot product `a = x dot y` on both CPUs and GPUs
     - compiles to example2\_dot
+- example3
+    - example of how to write a parallel group by and agregation on both CPUs and GPUs
+    - compiles to example3\_groupby
+
+Each of these examples have a read me explaining the code and the example code has comments
+explaining what is going on in the code.
 
 ## Compiling
 
