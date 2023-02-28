@@ -19,3 +19,11 @@ $O_{h,w} = \sum_{r=0}^{R} \sum_{s=0}^S I_{h+r,w+s} \times W_{R-r-1,S-s-1}$
 where O is the output, I is the input, W is our filter, 
 R and S are sizes of the filter, and h and w are height and width.
 
+## Extra: Understanding the Math
+
+Convolutions are a useful operation in mathematics and can show up everywhere from image
+processing, machine learning, to pre-algebra classes. 
+
+The following video from [3Blue1Brown](https://youtu.be/KuXjwB4LzSA) is extremely informative
+on the idea of a convolution and how it can show up in computer science or math.
+
