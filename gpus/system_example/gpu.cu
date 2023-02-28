@@ -43,7 +43,7 @@ void convolve(ptrdiff_t height, ptrdiff_t width, std::vector<float>& floatrep) {
 
     using ImplicitGemm = cutlass::conv::device::ImplicitGemmConvolution<FpropKernel>;
 
-    cutlass::conv::Mode mode = cutlass::conv::Mode::kCrossCorrelation;
+    cutlass::conv::Mode mode = cutlass::conv::Mode::kConvolution;
 
     // NHWC
     cutlass::Tensor4DCoord input_size(1l, height, width, 1l);
