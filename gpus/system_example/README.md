@@ -19,6 +19,16 @@ $O_{h,w} = \sum_{r=0}^{R} \sum_{s=0}^S I_{h+r,w+s} \times W_{R-r-1,S-s-1}$
 where O is the output, I is the input, W is our filter, 
 R and S are sizes of the filter, and h and w are height and width.
 
+You can use the `Test.png` image. If you do so the image will look like this:
+
+![Test image](Test.png)
+
+And the output from using the GPU will look like this:
+
+![Result image](result/Result.png)
+
+`gpu.cu` contains the GPU code and `cpu.cc` contains the CPU code.
+
 ## Extra: Understanding the Math
 
 Convolutions are a useful operation in mathematics and can show up everywhere from image
