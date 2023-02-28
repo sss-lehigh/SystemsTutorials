@@ -19,7 +19,8 @@ You must start by installing cmake, conan, and [CUDA](https://developer.nvidia.c
 - conan can be installed from [pip](https://pip.pypa.io/en/stable/installation/#supported-methods) or 
 wherever you get your python packages (e.g., `pip install conan`)
 
-Once installed make a directory called build (`mkdir build`).
-In this directory run `conan install ..` and then `cmake ..`. After this run make using `make`.
+Once installed navigate to the cutlass directory and run `conan create .`. 
+Next make a directory called build (`mkdir build`).
+In this directory run `conan install .. --build=missing` and then `cmake ..`. After this run make using `make -j`.
 At this point you will have compiled the binaries in build and be able to run them.
 

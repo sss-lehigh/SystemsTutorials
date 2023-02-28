@@ -1,5 +1,8 @@
 [requires]
 tbb/2020.3
+boost/1.80.0
+libpng/1.6.39
+cutlass/2.11.0
 
 [generators]
 cmake_find_package
