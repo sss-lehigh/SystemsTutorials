@@ -16,3 +16,6 @@ add_executable(example2_dot example2/example2.cu)
 target_link_libraries(example2_dot PUBLIC TBB::tbb)
 target_compile_options(example2_dot PUBLIC "--expt-extended-lambda")
 
+add_executable(example3_groupby example3/example3.cu)
+target_link_libraries(example3_groupby PUBLIC TBB::tbb)
+target_compile_options(example3_groupby PUBLIC "--expt-extended-lambda")
