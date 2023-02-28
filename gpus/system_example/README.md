@@ -1,13 +1,13 @@
-# Blurring and Image
+# Detecting Edges In An Image Image
 
 This is example code demonstrating the power of GPUs.
 
 Run `image_proccess_cpu` and `image_proccess_gpu` with the path to Test.png after
 you have built this project. The CPU processing version uses the Boost GIL library
-to run its blur kernel. The GPU version utilizes CUTLASS, a CUDA library math with
+to run its edge detection kernel. The GPU version utilizes CUTLASS, a CUDA library math with
 matricies.
 
-Blurring is done through a mathematical operation called convolution. Convolution
+Edge detection is done through a mathematical operation called convolution. Convolution
 takes an image as a 4-dimensional array and moves a filter (matrix) across the 
 image. The filter is directly multiplied with the array and is accumulated into
 an output.

@@ -16,14 +16,15 @@ int main(int argc, char** argv) {
 
     boost::gil::read_image(argv[1], img, boost::gil::png_tag{});
 
-    float gaussian[]={0.00022923296f, 0.0059770769f,0.060597949f,
-                        0.24173197f,0.38292751f, 0.24173197f,
-                        0.060597949f,0.0059770769f,0.00022923296f};
+    float prewitt_filter[]={-1.f,0.f ,1.0f,
+                      -1.f,0.f, 1.0f,
+                      -1.f,0.f, 1.0f};
+
 
     boost::gil::rgb8_image_t filtered(img);
 
     auto start = std::chrono::high_resolution_clock::now();
-    boost::gil::kernel_1d_fixed<float, 9> kernel(gaussian, 4);
+    boost::gil::kernel_1d_fixed<float, 9> kernel(prewitt_filter, 4);
 
     boost::gil::convolve_rows_fixed<boost::gil::rgb32f_pixel_t>(boost::gil::const_view(filtered), kernel, boost::gil::view(filtered));
     boost::gil::convolve_cols_fixed<boost::gil::rgb32f_pixel_t>(boost::gil::const_view(filtered), kernel, boost::gil::view(filtered));

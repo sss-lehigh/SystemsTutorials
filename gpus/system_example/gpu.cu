@@ -12,9 +12,9 @@
 
 void convolve(ptrdiff_t height, ptrdiff_t width, std::vector<float>& floatrep) {
 
-    float gaussian[]={0.00022923296f, 0.0059770769f,0.060597949f,
-                      0.24173197f,0.38292751f, 0.24173197f,
-                      0.060597949f,0.0059770769f,0.00022923296f};
+    float prewitt_filter[]={-1.f,0.f ,1.0f,
+                      -1.f,0.f, 1.0f,
+                      -1.f,0.f, 1.0f};
 
     using EpilogueOp = cutlass::epilogue::thread::LinearCombination<
         float,
@@ -81,7 +81,7 @@ void convolve(ptrdiff_t height, ptrdiff_t width, std::vector<float>& floatrep) {
     if(cudaMemcpy(a, floatrep.data(), sizeof(float) * floatrep.size(), cudaMemcpyHostToDevice) != cudaSuccess)
         exit(1);
     
-    if(cudaMemcpy(w, gaussian, sizeof(float) * 9, cudaMemcpyHostToDevice) != cudaSuccess)
+    if(cudaMemcpy(w, prewitt_filter, sizeof(float) * 9, cudaMemcpyHostToDevice) != cudaSuccess)
         exit(1);
     
     // layout is stride between width, stride between height, stride between N
