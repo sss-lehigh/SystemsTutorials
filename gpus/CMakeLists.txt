@@ -28,3 +28,11 @@ target_compile_options(example2_dot PUBLIC "--expt-extended-lambda")
 add_executable(example3_groupby example3/example3.cu)
 target_link_libraries(example3_groupby PUBLIC TBB::tbb)
 target_compile_options(example3_groupby PUBLIC "--expt-extended-lambda")
+
+add_executable(solution you_try/solution/program_here.cu)
+target_link_libraries(solution PUBLIC TBB::tbb)
+target_compile_options(solution PUBLIC "--expt-extended-lambda")
+
+add_executable(your_solution you_try/program_here.cu)
+target_link_libraries(your_solution PUBLIC TBB::tbb)
+target_compile_options(your_solution PUBLIC "--expt-extended-lambda")
