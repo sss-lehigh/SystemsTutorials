@@ -8,9 +8,6 @@
 #include <map>
 #include <chrono>
 
-template<typename T>
-using vector = thrust::host_vector<T>;
-
 template<typename S, typename T>
 using pair = thrust::pair<S, T>;
 
@@ -27,11 +24,13 @@ int main() {
 
     using city_t = unsigned;
 
-    vector<pair<city_t, float>> data;
+    thrust::host_vector<pair<city_t, float>> data;
 
     for(int i = 0; i < size; ++i) {
         data.push_back({static_cast<unsigned>(rand() % num_cities), rand() / 100.0f});
     }
+
+    // --------------- C++ Sequential ---------------------------
 
     // one way we can do this is to perform a map reduce
 
@@ -61,7 +60,9 @@ int main() {
 
     auto end = std::chrono::high_resolution_clock::now();
 
-    std::cout << std::chrono::duration<double>(end - start).count() << std::endl;
+    std::cout << "Sequential: " << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
+
+    // --------------- C++ Parallel ---------------------------
 
     // now we parallelize the map reduce
     start = std::chrono::high_resolution_clock::now();
@@ -90,8 +91,10 @@ int main() {
 
     end = std::chrono::high_resolution_clock::now();
 
-    std::cout << std::chrono::duration<double>(end - start).count() << std::endl;
+    std::cout << "Parallel: " << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
 
+    // --------------- Thrust ---------------------------
+    
     // lets compare to thrust
     // CUDA does not have a map type so we must do something else
     
@@ -103,8 +106,8 @@ int main() {
     thrust::device_vector<city_t> output_key_d(num_cities);
     thrust::device_vector<float> output_value_d(num_cities);
     
-    vector<city_t> output_key(num_cities);
-    vector<float> output_value(num_cities);
+    thrust::host_vector<city_t> output_key(num_cities);
+    thrust::host_vector<float> output_value(num_cities);
 
     start = std::chrono::high_resolution_clock::now();
 
@@ -134,6 +137,6 @@ int main() {
 
     end = std::chrono::high_resolution_clock::now();
 
-    std::cout << std::chrono::duration<double>(end - start).count() << std::endl;
+    std::cout << "Thrust: " << std::chrono::duration<double>(end - start).count() << " ms" << std::endl;
 }
 

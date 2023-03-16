@@ -42,10 +42,10 @@ is able to achieve close to the performance of hand optimizations
 while being significantly more programmable.
 
 ```
-Duration of parallel cpp version (ms):		8.73581
-Duration of parallel tbb version (ms):		9.52444
-Duration of parallel thrust version (ms):	1.99218
-Duration of parallel cuda version (ms):		1.62102
-Duration of sequential version (ms):		52.951
-Speedup of best:				            32.6651
+Duration of parallel cpp version (ms):      8.73581
+Duration of parallel tbb version (ms):      9.52444
+Duration of parallel thrust version (ms):   1.99218
+Duration of parallel cuda version (ms):     1.62102
+Duration of sequential version (ms):        52.951
+Speedup of best:                            32.6651
 ```
