@@ -17,7 +17,7 @@ This tutorial uses CUDA and TBB to demonstrate how to use GPUs and what it means
     - example of how to write a parallel group by and agregation on both CPUs and GPUs
     - compiles to example3\_groupby
 
-Each of these examples have a Readme explaining the code and the example code has comments
+Each of these examples have a `README.md` explaining the code and the example code has comments
 explaining what is going on in the code.
 
 ## Compiling
