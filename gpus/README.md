@@ -28,7 +28,7 @@ You must start by installing cmake, conan, and [CUDA](https://developer.nvidia.c
 - conan 1.58 can be installed from [pip](https://pip.pypa.io/en/stable/installation/#supported-methods) or 
 wherever you get your python packages (e.g., `pip install conan==1.58`)
 
-Once installed navigate to the [cutlass](cutlass) directory (`cd cutlass`) and run `conan create .` then return to the gpus directory (`cd ..`).
+Once installed navigate to the [`cutlass`](cutlass) directory (`cd cutlass`) and run `conan create .` then return to the gpus directory (`cd ..`).
 Next make a directory called build (`mkdir build`). Navigate to this directory (`cd build`).
 In this directory run `conan install .. --build=missing` and then `cmake ..`. After this run make using `make -j`.
 At this point you will have compiled the binaries in build and be able to run them.
