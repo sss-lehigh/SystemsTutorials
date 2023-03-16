@@ -23,6 +23,8 @@ We are not limited to mapping a single task to a single thread, sometimes we may
 `1.0 * [1 2 3 4] + [1 2 3 4]` may be mapped to two threads as calculating `1.0 * [1 2] + [1 2]` and `1.0 * [3 4] + [3 4]`. This enables
 us to get an ideal speedup proportional to the number of threads that we can parallelize on.
 
+To learn more about the map pattern and how it can be used in standard C++ [read here](../docs/Map.md).
+
 For large problems, the GPU will enable us to parallelize more than the CPU can. While CPUs are limited to hundreds of cores, GPUs
 can easily exceed thousands of cores for specialized problems such as floating point operations or integer arithmetic.
 
