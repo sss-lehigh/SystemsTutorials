@@ -31,9 +31,13 @@ template<typename InputIter, typename InputIter2, typename OutputIter, typename 
 constexpr OutputIter std::transform(InputIter firstIn, InputIter lastIn, InputIter2 firstIn2, OutputIter firstOut, Operator op);
 ```
 
-In our scalar a x plus y (SAXPY) implementation given in [example 1](../example1) this can be used to output to y by doing:
+In our scalar a x plus y (SAXPY) implementation given in [example 1](../example1) this can be used to output the result by doing:
 
 ```{c++}
+std::vector<float> x;
+std::vector<float> y;
+std::vector<float> output;
+// ...
 std::transform(x.begin(), x.end(), y.begin(), output.begin(), op);
 ```
 

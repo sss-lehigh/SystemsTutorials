@@ -31,6 +31,8 @@ can easily exceed thousands of cores for specialized problems such as floating p
 In order to use a GPU to get improvements in performance, we must copy memory from the CPU to the GPU, perform a calculation with 
 code we write, and copy results in memory back from the GPU to the CPU.
 
+To learn more about the performing the map pattern in a high level library on the GPU [read here](../docs/MapOnGPU.md).
+
 In this example we demonstrate how to do this on a CPU at a high level, a high level way to do this on the GPU using [Thrust](https://thrust.github.io), and how this
 operation could be written as a kernel (GPU code) in [CUDA](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html).
 
