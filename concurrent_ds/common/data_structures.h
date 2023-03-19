@@ -7,13 +7,13 @@
 #define DATA_STRUCTURES_H
 
 #if defined SEQUENTIAL
-#include "seq_bst/bst.h"
+#include "../bst_variations/seq_bst/bst.h"
 #elif defined HOH_LOCKING
-#include "hoh_bst/bst.h"
+#include "../bst_variations/hoh_bst/bst.h"
 #elif defined OPTIMISTIC_LOCKING
-#include "optimistic_locking/bst.h"
+#include "../bst_variations/optimistic_locking/bst.h"
 #else
-#include "optimistic_locking/bst.h"
+#error "NO FILE"
 #endif
 
 #endif /* DATA_STRUCTURES_H */
