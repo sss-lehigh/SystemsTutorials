@@ -1,11 +1,10 @@
 /* 
- * File:   bst.h
- * Author: Olivia Grimes
+ * File:   hoh_bst.h
  *
  * Created on February 2, 2023
  */
 #include <iostream>
-#include "node.h"
+#include "hoh_node.h"
 
 #ifndef BST_H
 #define BST_H
@@ -17,11 +16,14 @@ private:
 public:
     BST() : root(NULL) {}
 
-    void printLevelOrder();
-    void printInOrder();
+    // BST API
     nodeptr insert(int key);
     nodeptr remove(int key);
     bool contains(int key);
+
+    // printing methods
+    void printLevelOrder();
+    void printInOrder();
 };
 
 #endif

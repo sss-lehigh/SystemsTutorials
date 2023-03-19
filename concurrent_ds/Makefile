@@ -3,24 +3,33 @@
 CC = g++
 CFLAGS = -Wall -O3 -g -pthread
 
-all: hoh opt seq
+all: solution tutorial
+
+solution: seq hoh opt 
+tutorial: seq_tutorial hoh_tutorial opt_tutorial
 
 seq:
-	$(CC) $(CFLAGS) -o main_seq -DSEQUENTIAL -I common -I seq_bst main.cpp bst_variations/seq_bst/bst.cpp
+	$(CC) $(CFLAGS) -o main_seq -DSEQUENTIAL -I common main.cpp bst_variations/seq_bst/seq_bst.cpp
 
 hoh:
-	$(CC) $(CFLAGS) -o main_hoh -DHOH_LOCKING -I common -I hoh_bst main.cpp bst_variations/hoh_bst/bst.cpp
+	$(CC) $(CFLAGS) -o main_hoh -DHOH_LOCKING -I common main.cpp bst_variations/hoh_bst/hoh_bst.cpp
 
 opt:
-	$(CC) $(CFLAGS) -o main_opt -DOPTIMISTIC_LOCKING -I common -I optimistic_locking main.cpp bst_variations/optimistic_locking/bst.cpp
+	$(CC) $(CFLAGS) -o main_opt -DOPTIMISTIC_LOCKING -I common main.cpp bst_variations/optimistic_locking/opt_bst.cpp
+
+seq_tutorial:
+	$(CC) $(CFLAGS) -o seq_tutorial -DSEQUENTIAL_TUTORIAL -I common main.cpp bst_tutorial/seq_bst/seq_bst.cpp
+
+hoh_tutorial:
+	$(CC) $(CFLAGS) -o hoh_tutorial -DHOH_LOCKING_TUTORIAL -I common main.cpp bst_tutorial/hoh_bst/hoh_bst.cpp
+
+opt_tutorial:
+	$(CC) $(CFLAGS) -o opt_tutorial -DOPTIMISTIC_LOCKING_TUTORIAL -I common main.cpp bst_tutorial/optimistic_locking/opt_bst.cpp
 
 clean:
-	if [ -f main_hoh ]; then \
-		rm main_hoh; \
-	fi
-	if [ -f main_opt ]; then \
-		rm main_opt; \
-	fi
-	if [ -f main_seq ]; then \
-    	rm main_seq; \
-	fi
+	if [ -f main_hoh ]; then rm main_hoh; fi
+	if [ -f main_opt ]; then rm main_opt; fi
+	if [ -f main_seq ]; then rm main_seq; fi
+	if [ -f seq_tutorial ]; then rm seq_tutorial; fi
+	if [ -f hoh_tutorial ]; then rm hoh_tutorial; fi
+	if [ -f opt_tutorial ]; then rm opt_tutorial; fi

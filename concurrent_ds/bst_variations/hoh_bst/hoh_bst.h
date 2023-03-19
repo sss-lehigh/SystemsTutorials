@@ -5,7 +5,7 @@
  * Created on February 2, 2023
  */
 #include <iostream>
-#include "node.h"
+#include "hoh_node.h"
 
 // NOTE: alternatively could add a "type" field to the node to allow for negative keys
 #define SENTINEL -1
@@ -24,8 +24,6 @@ public:
     bool insert(int key);
     bool remove(int key);
     bool contains(int key);
-
-    bool verifyTraversal(nodeptr prev, nodeptr curr, int key);
 
     // printing methods - single threaded
     void printLevelOrder();

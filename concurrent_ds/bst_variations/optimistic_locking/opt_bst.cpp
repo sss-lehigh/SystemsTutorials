@@ -14,16 +14,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "bst.h"
+#include "opt_bst.h"
 
 using namespace std;
-
-struct node_ll {
-    // TODO: make LL of nodes to unlock in remove below, then unlock - see if this removes the issue
-    nodeptr bst_node;
-    node_ll* next;
-
-};
 
 void addSentinels(Node* node) {
     Node* left_sentinel = new Node(SENTINEL);
@@ -84,20 +77,8 @@ bool BST::insert(int key) {
             parent = curr;
             curr = curr->right;
         }
-        // key is already present - TODO: should I return a pair or just false?
-        else {
+        else
             return false;
-        }
-
-        // TODO: fixme (as with in delete() and contains())
-        if (curr == NULL) {
-            cout << "I should not be here (insert) :) trying to insert: " << key << endl;
-            // fstream outfile;
-            // outfile.open("output.txt", ios::out | ios::app);
-            // outfile << "I should not be here (insert) :) trying to insert: " << key << endl;
-            // outfile.close();
-            return false;
-        }  
     }
 
     // NOTE: curr is a sentinel node
@@ -112,8 +93,8 @@ bool BST::insert(int key) {
     // add sentinels to the new node
     addSentinels(curr);
     // TODO: add memory barrier?
-    // curr is now the sentinel that we want to replace with the new node
-    curr->key = key; // ISSUE: next ptr is null !!!!
+    // curr is the sentinel that we want to replace with the new node
+    curr->key = key;
 
     // unlock
     curr->mtx.unlock();
@@ -143,16 +124,6 @@ bool BST::remove(int key) {
             curr = curr->right;
         } else
             break;
-
-        // TODO: figure out where sentinels are being mishandled, and how to make sure we never try to traverse to a null node
-        if (curr == NULL) {
-            cout << "I should not be here (remove) :) prev's key is: " << prev->key << endl;
-            // fstream outfile;
-            // outfile.open("output.txt", ios::out | ios::app);
-            // outfile << "I should not be here (remove) :) prev's key is: " << prev->key << endl;
-            // outfile.close();
-            return false;
-        }
     }
 
     // didn't find the node
@@ -196,19 +167,12 @@ bool BST::remove(int key) {
     }
     // two children
     else {
-
-
         nodeptr p = NULL;
         nodeptr temp;
-
-        // TODO: see if this below mechanism may cause an issue --> what needs to be locked when we "move" the in-order successor node ??
-        // think about when it's a node being deleted with two children high in the tree
 
         // TODO: how to adapt this for optimstic locking ??
         // locking here --> at most, one (additional) lock held at a time 
         // compute in-order successor
-
-        
         temp = curr->right;
         temp->mtx.lock();
         while (temp->left->key != SENTINEL) {
@@ -217,24 +181,6 @@ bool BST::remove(int key) {
             temp = temp->left;
             temp->mtx.lock();
         }
-
-        /*
-        if (p != NULL) {
-            if (!verifyTraversal(p, temp, key)) {
-                prev->mtx.unlock();
-                curr->mtx.unlock();
-                p->mtx.unlock();
-                temp->mtx.unlock();
-                return false;
-            }
-        } else {
-            if (!verifyTraversal(curr, temp, key)) {
-                prev->mtx.unlock();
-                curr->mtx.unlock();
-                temp->mtx.unlock();
-                return false;
-            }
-        }*/
 
         // p's left child is the in-order successor
         // if temp has a right subtree, set it as p's left-subtree
@@ -269,17 +215,8 @@ bool BST::contains(int key) {
         } else if (curr->key < key) {
             prev = curr;
             curr = curr->right;
-        } else {
+        } else
             break;
-        }
-        if (curr == NULL) {
-            cout << "I should not be here :) prev's key is: " << prev->key << endl;
-            // fstream outfile;
-            // outfile.open("output.txt", ios::out | ios::app);
-            // outfile << "I should not be here :) prev's key is: " << prev->key << endl;
-            // outfile.close();
-            return false;
-        }  
     }
 
     // didn't find the key, return false;

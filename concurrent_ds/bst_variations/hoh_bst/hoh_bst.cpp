@@ -6,7 +6,7 @@
  */
 
 #include <mutex>
-#include "bst.h"
+#include "hoh_bst.h"
 
 using namespace std;
 
