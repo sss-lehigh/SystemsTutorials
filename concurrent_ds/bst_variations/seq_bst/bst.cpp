@@ -175,7 +175,7 @@ nodeptr BST::remove(int key) {
     return root;
 }
 
-bool BST::search(int key) {
+bool BST::contains(int key) {
     if (root == NULL)
         return false;
 

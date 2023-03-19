@@ -10,8 +10,6 @@
 
 using namespace std;
 
-std::mutex rootMtx;
-
 BST::BST() {
     Node* sentinel_beg = new Node(SENTINEL);
     root = sentinel_beg;
@@ -24,24 +22,6 @@ void addSentinels(Node* node) {
     node->right = right_sentinel;
 }
 
-bool BST::insertRoot(int key) {
-    // block threads that don't acquire rootMtx first to avoid issues w inserting until the root is set
-    rootMtx.lock();
-
-    // someone else already initialized the root
-    if (root->right) {
-        rootMtx.unlock();
-        return false;
-    }
-    // create the root and add it to the tree (NOTE: beg sentinel's left ptr is NULL, right is to "true root")
-    Node* trueRoot = new Node(key);
-    addSentinels(trueRoot);
-    root->right = trueRoot;
-
-    rootMtx.unlock();
-    return true;
-}
-
 /**
  * @brief insert a node into the binary search tree
  * 
@@ -49,21 +29,16 @@ bool BST::insertRoot(int key) {
  * @return nodeptr - NULL if present else root
  */
 bool BST::insert(int key) {
-    // if there is no true root, insert the new node as the root
-
-    // if (!root->right) {
-    //     if (insertRoot(key)) {
-    //         return root;
-    //     }
-    // }
-
+    // lock the sentinel node
     nodeptr parent = root;
     parent->mtx.lock();
 
+    // add root to the tree
     if (!parent->right) {
         Node* trueRoot = new Node(key);
         addSentinels(trueRoot);
         root->right = trueRoot;
+        parent->mtx.unlock();
         return root;
     }
 
@@ -87,7 +62,7 @@ bool BST::insert(int key) {
         else {
             parent->mtx.unlock();
             curr->mtx.unlock();
-            return NULL;
+            return false; // TODO: maybe this should not be false?
         }
     }
 
@@ -107,10 +82,12 @@ bool BST::insert(int key) {
 bool BST::remove(int key) {
     nodeptr prev = root;
     prev->mtx.lock();
+    // if tree is empty
     if (!prev->right) {
         prev->mtx.unlock();
         return false;
     }
+    // get the "true root"
     nodeptr curr = prev->right;
     curr->mtx.lock();
 
@@ -132,9 +109,12 @@ bool BST::remove(int key) {
     }
 
     // didn't find the node
-    // TODO: could it be SENTINEL_BEG possibly ?
-    if (curr->key == SENTINEL)
+    if (curr->key == SENTINEL) {
+        prev->mtx.unlock();
+        curr->mtx.unlock();
         return false;
+    }
+        
 
     // at most one child (0-1 children)
     if (curr->left->key == SENTINEL || curr->right->key == SENTINEL) {
@@ -226,7 +206,7 @@ bool BST::contains(int key) {
     curr->mtx.unlock();
     return false;
 }
- 
+
 
 /**
  * 
@@ -237,8 +217,6 @@ bool BST::contains(int key) {
  * They do not support concurrency.
  * 
  */
-
-
 
 /**
  * @brief Compute the "height" of a tree -- the number of nodes along

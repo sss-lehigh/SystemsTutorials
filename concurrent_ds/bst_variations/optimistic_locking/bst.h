@@ -17,16 +17,19 @@
 class BST {
 private:
     nodeptr root;
-    bool insertRoot(int key);
 
 public:
-    //BST() : root(NULL) {}
     BST();
-    void printLevelOrder();
-    void printInOrder();
+    
     bool insert(int key);
     bool remove(int key);
     bool contains(int key);
+
+    bool verifyTraversal(nodeptr prev, nodeptr curr, int key);
+
+    // printing methods - single threaded
+    void printLevelOrder();
+    void printInOrder();
 };
 
 #endif

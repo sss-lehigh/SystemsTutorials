@@ -21,7 +21,7 @@ public:
     void printInOrder();
     nodeptr insert(int key);
     nodeptr remove(int key);
-    bool search(int key);
+    bool contains(int key);
 };
 
 #endif

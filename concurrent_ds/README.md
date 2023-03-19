@@ -9,17 +9,14 @@ TODO: An in-depth paragraph about your project and overview of use.
 
 ## Getting Started
 
-### Dependencies
-
-TODO:
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
-
 ### Installing
 
-TODO:
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* Clone this repo into your sunlab account: login to your sunlab account on the terminal, and in the directory of your choice, run the following command:
+```
+git clone https://github.com/sss-lehigh/SystemsTutorials.git
+```
+
+* You will additionally need to mount a remote filesystem (i.e, sunlab) to your IDE of choice. Please see instructions here
 
 ### Executing program
 
@@ -31,6 +28,10 @@ code blocks for commands
 ```
 
 ## Tutorial
+
+Before beginning this tutorial, please follow the installation instructions above.
+
+### Sequential BST Implementation
 
 ### Hand over hand locking
 
@@ -50,6 +51,13 @@ public:
 3. Add locking and unlocking of parent and curr
 
 4. Create addSentintels() method
+
+### Optimistic locking
+
+1. First create method `verify_traversal(nodeptr prev, nodeptr curr, bool left)`
+
+2. Go through each method and remove HoH mutex calls -- to --> only lock prev and curr and then call verify_traversal()
+
 
 ## Help
 
