@@ -18,8 +18,8 @@ public:
     BST() : root(NULL) {}
 
     // BST API
-    nodeptr insert(int key);
-    nodeptr remove(int key);
+    bool insert(int key);
+    bool remove(int key);
     bool contains(int key);
 
     // printing methods

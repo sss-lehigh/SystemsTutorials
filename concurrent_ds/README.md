@@ -5,35 +5,99 @@ This repo is meant to serve as a tutorial to learn how to implement concurrent d
 
 ## Description
 
-TODO: An in-depth paragraph about your project and overview of use.
+Use this repo to learn how to transform a sequential data structure to a multi-threaded, concurrent one using three different techniques: (1) hand-over-hand locking, (2) optimistic locking, and (3) a lock-free technique.
 
 ## Getting Started
 
+### Important Directories
+
+This tutorial takes place in its entirety in the `concurrent_ds/` directory.
+
+Within the `concurrent_ds/` directory, there is a directory called `bst_tutorial/` and a directory called `bst_solution/`. `bst_solution/` contains the solution for the binary search tree variants that will be implemented in this tutorial, whereas `bst_tutorial/` initially contains the skeleton code, to be updated and implemented in this tutorial.
+
+`common/` contains files required to run the trials, and do not need to be modified in this tutorial.
+
+
 ### Installing
 
-* Clone this repo into your sunlab account: login to your sunlab account on the terminal, and in the directory of your choice, run the following command:
+* Clone this repo on to your local computer, in a directory of your choosing:
 ```
 git clone https://github.com/sss-lehigh/SystemsTutorials.git
 ```
 
-* You will additionally need to mount a remote filesystem (i.e, sunlab) to your IDE of choice. Please see instructions here
+### Building the data structures
 
-### Executing program
+1. Send the code to your sunlab account using the `scp` command. From the root directory of this repo (`SystemsTutorials/`), run:
+    ```
+    scp concurrent_ds/ <sunlab_username>@sunlab.cse.lehigh.edu:~
+    ```
+    ***NOTE:*** you can choose to put your code in whichever directory you would like on your sublab account (i.e., doesn't have to be your home directory as in the command).
 
-TODO:
-* How to run the program
-* Step-by-step bullets
+2. Login to your sunlab account, and navigate to the `concurrent_ds/` directory.
+
+    To create the executable for the solution files provided, run:
+
+    ```
+    make solution
+    ```
+
+    To create the executable for the tutorial files, run:
+    ```
+    make tutorial
+    ```
+
+    You can also choose to make individual executables: by passing at least of the following to `make`:
+    * `seq` : sequential BST solution
+    * `hoh` : hand-over-hand locking BST solution
+    * `opt` : optimistic locking BST solution
+    * `seq_tutorial` : sequential BST tutorial
+    * `hoh_tutorial` : hand-over-hand locking BST tutorial
+    * `opt_tutorial` : optimistic locking BST tutorial
+
+    The executables produced by running the aforementioned `make` commands are named the same as the option passed to `make` to create the executable (i.e., the list right above this).
+
+### Executing the programs
+
+After building executables, you can run them by passing the following options:
+* `s` : the time in milliseconds to run the trial
+* `k` : the key range, [0, k)
+* `i` : the ratio of inserts as a percentage
+* `r` : the ratio of removes as a percentage
+* `c` : the ratio of contains as a percentage
+* `t` : the number of threads to use
+
+For example:
 ```
-code blocks for commands
+./opt -s 3000 -k 1000000 -i 10 -r 10 -c 80 -t 8
 ```
+
+***NOTE:*** the values passed to `-i`, `-r`, and `-c` must add to 100.
 
 ## Tutorial
 
-Before beginning this tutorial, please follow the installation instructions above.
+Before beginning this tutorial, please follow the installation instructions above, and open the `concurrent_ds/` directory in an IDE. Please also familiarize yourself with how to build and execute the programs, which will be needed later on.
 
-### Sequential BST Implementation
+### Pre-Tutorial Reading: Sequential BST Implementation
 
-### Hand over hand locking
+The sequential implementation of a binary search tree which supports adding, removing, and searching for a key, has been provided in the `bst_tutorial/` directory. Let's begin by understanding this implementation.
+
+1. In your IDE, open the three files within the `concurrent_ds/bst_tutorial/` directory (`seq_bst.cpp`, `seq_bst.h`, `seq_node.h`).
+
+2. Let's begin with `seq_node.h`. This file defines the layout of a node in the binary search tree: each node contains a key and a left and a right pointer. There is a constructor which takes in a key, and sets the left and right pointers to NULL. This is a very typical, simple node layout for a node of a binary search tree. Additionally, on line 14, `nodeptr` is defined as a pointer to a node.
+
+3. Now let's move on to `seq_bst.h`. This file defines the binary search tree. It stores a pointer to the root of the tree, and includes the following methods: a constuctor which sets the root node as NULL, methods to insert, remove, and search for a key in the BST. Note that it includes the node header class in order to use the node which we previously defined.
+
+4. Finally, let's move on to the bulk of the implementation, `seq_bst.cpp`, which implements the methods defined in `seq_bst.h`. Examine each of the following methods: `contains()`, `insert()`, and `remove()`, making sure to understand each. Use the comments to help in your understanding. Once you understand these methods, you are ready to begin creating a concurrent version!
+
+### Tutorial 1: Hand-Over-Hand Locking
+
+1. In this tutorial, we will use a technique called hand-over-hand (HoH) locking to transform the sequential binary search tree into a concurrent one. If you are unfamilar with the concept of HoH locking, please take a moment to read and understand slides 16-30 from the following source: https://courses.csail.mit.edu/6.852/08/lectures/Lecture21.pdf 
+
+2. This tutorial will edit code in the `concurrent_ds/bst_tutorial/hoh_bst` directory. The code that is currently there is the sequential version of the binary search tree, which we previously spent time understanding. Please open the three files within this directory.
+
+
+
+
 
 1. Open node.h and add a mutex field. This enables fine-grained locking at the node-level via mutexes:
 ```c++
@@ -70,26 +134,5 @@ command to run if program contains helper info
 
 Contributors names and contact info
 
-ex. Dominique Pizzie  
+ex. Dominique Pizzie
 ex. [@DomPizzie](https://twitter.com/dompizzie)
-
-## Version History
-
-* 0.2
-    * Various bug fixes and optimizations
-    * See [commit change]() or See [release history]()
-* 0.1
-    * Initial Release
-
-## License
-
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)

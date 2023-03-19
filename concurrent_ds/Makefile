@@ -9,13 +9,13 @@ solution: seq hoh opt
 tutorial: seq_tutorial hoh_tutorial opt_tutorial
 
 seq:
-	$(CC) $(CFLAGS) -o main_seq -DSEQUENTIAL -I common main.cpp bst_variations/seq_bst/seq_bst.cpp
+	$(CC) $(CFLAGS) -o seq -DSEQUENTIAL -I common main.cpp bst_solution/seq_bst/seq_bst.cpp
 
 hoh:
-	$(CC) $(CFLAGS) -o main_hoh -DHOH_LOCKING -I common main.cpp bst_variations/hoh_bst/hoh_bst.cpp
+	$(CC) $(CFLAGS) -o hoh -DHOH_LOCKING -I common main.cpp bst_solution/hoh_bst/hoh_bst.cpp
 
 opt:
-	$(CC) $(CFLAGS) -o main_opt -DOPTIMISTIC_LOCKING -I common main.cpp bst_variations/optimistic_locking/opt_bst.cpp
+	$(CC) $(CFLAGS) -o opt -DOPTIMISTIC_LOCKING -I common main.cpp bst_solution/optimistic_locking/opt_bst.cpp
 
 seq_tutorial:
 	$(CC) $(CFLAGS) -o seq_tutorial -DSEQUENTIAL_TUTORIAL -I common main.cpp bst_tutorial/seq_bst/seq_bst.cpp

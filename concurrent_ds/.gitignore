@@ -2,6 +2,9 @@ seq_bst/bin
 seq_bst/build
 .vscode/
 hoh_bst/bin
-main_hoh
-main_opt
-main_seq
+hoh
+opt
+seq
+seq_tutorial
+hoh_tutorial
+opt_tutorial

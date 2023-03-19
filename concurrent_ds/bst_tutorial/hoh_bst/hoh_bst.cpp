@@ -6,17 +6,34 @@
 
 #include "hoh_bst.h"
 
-nodeptr BST::insert(int key) {
+bool BST::contains(int key) {
+    if (root == NULL)
+        return false;
+
+    nodeptr curr = root;
+    // iterate through the tree until we find the key we are searching for, or reach a null sentinel
+    while (curr) {
+        if (curr->key > key)
+            curr = curr->left;
+        else if (curr->key < key)
+            curr = curr->right;
+        else
+            return true; // found key
+    }
+    return false; // null sentinel
+}
+
+bool BST::insert(int key) {
     // if there is no root, insert the new node as the root
     if (!root) {
         root = new Node(key);
-        return root;
+        return true;
     }
 
     nodeptr prev = NULL;
     nodeptr curr = root;
 
-    // find the key, and it's parent
+    // search for the key to insert
     while (curr) {
         if (curr->key > key) {
             prev = curr;
@@ -27,27 +44,30 @@ nodeptr BST::insert(int key) {
         }
         // key is already present
         else
-            return NULL;
+            return false;
     }
+    // key not found -> prev points to the leaf node that will be the parent of the new node
 
     // create the new node, and add it to the tree
     Node* node = new Node(key);
+    // determine if the new node should be the L or R child of its parent (prev)
     if (prev->key > key)
         prev->left = node;
     else
         prev->right = node;
     
-    return root;
+    return true;
 }
 
 // return the root if success, NULL if root is null / key not present
-nodeptr BST::remove(int key) {
+bool BST::remove(int key) {
     nodeptr prev = NULL;
     nodeptr curr = root;
 
     if (root == NULL)
-        return root;
+        return false;
 
+    // find node to remove
     while (curr) {
         if (curr->key > key) {
             prev = curr;
@@ -62,9 +82,9 @@ nodeptr BST::remove(int key) {
 
     // didn't find the node -> return null
     if (curr == NULL)
-        return NULL;
+        return false;
 
-    // at most one child (0-1 children)
+    // node to remove has at most one child (0-1 children)
     if (curr->left == NULL || curr->right == NULL) {
         // replaces node to be deleted
         nodeptr newCurr;
@@ -78,7 +98,7 @@ nodeptr BST::remove(int key) {
         // check if we are deleting the root
         if (prev == NULL) {
             root = newCurr;
-            return root;
+            return true;
         }
 
         // reset prev accordingly
@@ -91,7 +111,7 @@ nodeptr BST::remove(int key) {
         delete curr;
 
     }
-    // two children
+    // node to remove has two children
     else {
         nodeptr p = NULL;
         nodeptr temp;
@@ -104,11 +124,11 @@ nodeptr BST::remove(int key) {
         }
 
         // p's left child is the in-order successor
-        // if temp has a right subtree, set it as p's left-subtree
+        // set p's left subtree as temp's right subtree
         if (p != NULL)
             p->left = temp->right;
-        // in-order successor is curr's right ptr
-        // if temp has a right subtree, set it as curr's right-subtree
+        // p is null, i.e., in-order successor IS curr's right ptr
+        // set curr's right-subtree as temp's right subtree
         else
             curr->right = temp->right;
 
@@ -117,23 +137,7 @@ nodeptr BST::remove(int key) {
         // delete temp which points to the node whose data we moved to the "true" node to be deleted
         delete temp;
     }
-    return root;
-}
-
-bool BST::contains(int key) {
-    if (root == NULL)
-        return false;
-
-    nodeptr curr = root;
-    while (curr) {
-        if (curr->key > key)
-            curr = curr->left;
-        else if (curr->key < key)
-            curr = curr->right;
-        else
-            return true;
-    }
-    return false;
+    return true;
 }
 
 
