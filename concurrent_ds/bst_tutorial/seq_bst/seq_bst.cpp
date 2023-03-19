@@ -20,7 +20,7 @@ bool BST::contains(int key) {
         else
             return true; // found key
     }
-    return false; // null sentinel
+    return false; // reached a null sentinel
 }
 
 bool BST::insert(int key) {

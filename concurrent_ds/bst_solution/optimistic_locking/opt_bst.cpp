@@ -304,3 +304,22 @@ void BST::printInOrder() {
     printInOrderHelper(curr);
     cout << std::endl;
 }
+
+void printInOrderHelper2(nodeptr curr, int small, int large) {
+    if (small != -1 && large != -1 && small >= large) {
+        cout << "NOT VALIDATED!!!" << endl;
+    }
+    if (curr->key != -1) {
+        printInOrderHelper2(curr->left, curr->left->key, curr->key);
+        //cout << curr->key << ' ';
+        printInOrderHelper2(curr->right, curr->key, curr->right->key);
+    }
+}
+
+void BST::validateDS() {
+    nodeptr prev = root;
+    nodeptr curr = prev->right;
+    cout << "Validating..." << endl;
+    printInOrderHelper2(curr, -1, curr->key);
+    cout << "Done validating." << endl;
+}

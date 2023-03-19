@@ -6,6 +6,9 @@
 #include <iostream>
 #include "hoh_node.h"
 
+#define SENTINEL -1
+#define SENTINEL_BEG -2
+
 #ifndef BST_H
 #define BST_H
 
@@ -14,7 +17,7 @@ private:
     nodeptr root;
 
 public:
-    BST() : root(NULL) {}
+    BST();
 
     // BST API
     bool insert(int key);

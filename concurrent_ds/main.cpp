@@ -499,6 +499,10 @@ int main(int argc, char *argv[]) {
 
     trial();
 
+    #ifdef OPTIMISTIC_LOCKING
+    tree->validateDS();
+    #endif
+
     // print output
     int num_inserts = 0;
     int num_removes = 0;

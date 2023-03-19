@@ -13,6 +13,7 @@ using namespace std;
 BST::BST() {
     Node* sentinel_beg = new Node(SENTINEL);
     root = sentinel_beg;
+    addSentinels(sentinel_beg);
 }
 
 void addSentinels(Node* node) {
@@ -34,12 +35,13 @@ bool BST::insert(int key) {
     parent->mtx.lock();
 
     // add root to the tree
-    if (!parent->right) {
-        Node* trueRoot = new Node(key);
-        addSentinels(trueRoot);
-        root->right = trueRoot;
+    if (parent->right->key == SENTINEL) {
+        // sentinel_beg's right sentinel becomes the "true root"
+        parent->right->key = key;
+        // add sentinels to the true root
+        addSentinels(parent->right);
         parent->mtx.unlock();
-        return root;
+        return true;
     }
 
     nodeptr curr = parent->right; // the "true root"
@@ -62,7 +64,7 @@ bool BST::insert(int key) {
         else {
             parent->mtx.unlock();
             curr->mtx.unlock();
-            return false; // TODO: maybe this should not be false?
+            return false;
         }
     }
 
@@ -83,7 +85,7 @@ bool BST::remove(int key) {
     nodeptr prev = root;
     prev->mtx.lock();
     // if tree is empty
-    if (!prev->right) {
+    if (prev->right->key == SENTINEL) {
         prev->mtx.unlock();
         return false;
     }
@@ -114,7 +116,6 @@ bool BST::remove(int key) {
         curr->mtx.unlock();
         return false;
     }
-        
 
     // at most one child (0-1 children)
     if (curr->left->key == SENTINEL || curr->right->key == SENTINEL) {
@@ -178,7 +179,7 @@ bool BST::remove(int key) {
 }
 
 bool BST::contains(int key) {
-    if (!root->right)
+    if (root->right->key == SENTINEL)
         return false;
 
     nodeptr prev = root;

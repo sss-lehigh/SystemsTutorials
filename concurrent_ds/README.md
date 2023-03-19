@@ -91,15 +91,14 @@ The sequential implementation of a binary search tree which supports adding, rem
 
 ### Tutorial 1: Hand-Over-Hand Locking
 
-1. In this tutorial, we will use a technique called hand-over-hand (HoH) locking to transform the sequential binary search tree into a concurrent one. If you are unfamilar with the concept of HoH locking, please take a moment to read and understand slides 16-30 from the following source: https://courses.csail.mit.edu/6.852/08/lectures/Lecture21.pdf 
+In this tutorial, we will use a technique called hand-over-hand (HoH) locking to transform the sequential binary search tree into a concurrent one. If you are unfamilar with the concept of HoH locking, please take a moment to read and understand slides 16-30 from the following source: https://courses.csail.mit.edu/6.852/08/lectures/Lecture21.pdf 
 
-2. This tutorial will edit code in the `concurrent_ds/bst_tutorial/hoh_bst` directory. The code that is currently there is the sequential version of the binary search tree, which we previously spent time understanding. Please open the three files within this directory.
+This tutorial will edit code in the `concurrent_ds/bst_tutorial/hoh_bst` directory. The code that is currently there is the sequential version of the binary search tree, which we previously spent time understanding.
 
+We are now ready to make modifications to the code.
 
+1. Since we now need the ability to lock and unlock nodes, we must add a mutex field to the definition of a node. This enables fine-grained locking at the node-level via mutexes. Open `hoh_node.h` and change the definition to include a mutex called mtx:
 
-
-
-1. Open node.h and add a mutex field. This enables fine-grained locking at the node-level via mutexes:
 ```c++
 public:
     int key;
@@ -108,6 +107,14 @@ public:
     mutex mtx;
 ```
 
+2. Briefly open `hoh_bst.h`. You'll note that the only difference from the sequential definition is the definitions `SENTINEL` and `SENTINEL_BEG`. While this is not a requirement for concurrent data structures, in this implementation we will designate sentinel nodes, which are essentially "dummy nodes" at the beginning and end of the data structure. This means that there will be one `SENTINEL_BEG` for the whole tree, and two `SENTINEL`s for each leaf node on the tree. Note that the `SENTINEL_BEG` node's left pointer will always be NULL, and the right pointer will point to what will be referred to as the "true root" of the tree.
+
+3. Now, open `hoh_bst.cpp`, which is where most, and the remainder, of the changes will occur. First, let's modify the constructor (line 9). When a new tree is created, we no longer want to simply set the root to NULL, so you can remove that line. Instead, we want to 
+
+
+
+
+--> notes:
 2. Add in sentinel node to the beginning (I chose to make the left pointer NULL and right pointer point to the "true root" as I will refer to it.)
 
 3. Modify the insert method to support concurrently inserting when the root is NULL. Add insertRoot()

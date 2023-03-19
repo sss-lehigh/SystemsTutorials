@@ -6,6 +6,10 @@
 
 #include "hoh_bst.h"
 
+BST::BST() {
+    root = NULL;
+}
+
 bool BST::contains(int key) {
     if (root == NULL)
         return false;
@@ -20,7 +24,7 @@ bool BST::contains(int key) {
         else
             return true; // found key
     }
-    return false; // null sentinel
+    return false; // reached a null sentinel
 }
 
 bool BST::insert(int key) {
