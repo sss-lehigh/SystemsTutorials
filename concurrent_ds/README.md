@@ -5,7 +5,7 @@ This repo is meant to serve as a tutorial to learn how to implement concurrent d
 
 ## Description
 
-Use this repo to learn how to transform a sequential data structure to a multi-threaded, concurrent one using three different techniques: (1) hand-over-hand locking, (2) optimistic locking, and (3) a lock-free technique.
+Use this repo to learn how to transform a sequential data structure to a multi-threaded, concurrent one using three different techniques: (1) hand-over-hand locking, (2) optimistic locking, and (3) a lock-free technique. This first section provides information on how to get started with the codebase, including describing important directories, and building and running executables. The next section contains the actual tutorials.
 
 ## Getting Started
 
@@ -84,13 +84,13 @@ Note that all line numbers mentioned in the tutorials will refer to the respecti
 
 ## Pre-Tutorial Reading: Sequential BST Implementation
 
-The sequential implementation of a binary search tree which supports adding, removing, and searching for a key, has been provided in the `bst_tutorial/` directory. Let's begin by understanding this implementation.
+The sequential implementation of a binary search tree which supports adding, removing, and searching for a key, has been provided in the `bst_tutorial/seq_bst/` directory. Let's begin by understanding this implementation.
 
-1. In your IDE, open the three files within the `concurrent_ds/bst_tutorial/` directory (`seq_bst.cpp`, `seq_bst.h`, `seq_node.h`).
+1. In your IDE, open the three files within the `concurrent_ds/bst_tutorial/seq_bst/` directory (`seq_bst.cpp`, `seq_bst.h`, `seq_node.h`).
 
-2. Let's begin with `seq_node.h`. This file defines the layout of a node in the binary search tree: each node contains a key and a left and a right pointer. There is a constructor which takes in a key, and sets the left and right pointers to NULL. This is a very typical, simple node layout for a node of a binary search tree. Additionally, on line 14, `nodeptr` is defined as a pointer to a node.
+2. Let's begin with `seq_node.h`. This file defines the layout of a node in the binary search tree: each node contains a key and a left and a right pointer. There is a constructor which takes in a key, and sets the left and right pointers to NULL. This is a very typical and simple node layout for a node of a binary search tree. Additionally, on line 14, `nodeptr` is defined as a pointer to a node.
 
-3. Now let's move on to `seq_bst.h`. This file defines the binary search tree. It stores a pointer to the root of the tree, and includes the following methods: a constuctor which sets the root node as NULL, methods to insert, remove, and search for a key in the BST. Note that it includes the node header class in order to use the node which we previously defined.
+3. Now let's move on to `seq_bst.h`. This file defines the binary search tree. It stores a pointer to the root of the tree, and includes the following methods: a constuctor which sets the root node as NULL, and methods to insert, remove, and search for a key in the BST.
 
 4. Finally, let's move on to the bulk of the implementation, `seq_bst.cpp`, which implements the methods defined in `seq_bst.h`. Examine each of the following methods: `contains()`, `insert()`, and `remove()`, making sure to understand each. Use the comments to help in your understanding. Once you understand these methods, you are ready to begin creating a concurrent version!
 
@@ -230,12 +230,16 @@ You have now created a HoH locking-based concurrent implementation of a binary s
     TODO: should I keep this as a "bad" example of a concurrent impl, and just mention that using a R/W lock would improve this? Or change to R/W lock?
 
 
-## Optimistic locking [ TUTORIAL WRITE-UP NOT YET COMPLETED ]
+## Tutorial 2: Optimistic locking [ TUTORIAL WRITE-UP NOT YET COMPLETED ]
+
+TODO: should this tutorial assume that you "learned" things in the previous tutorial, and therefore skip over it? (e.g., adding the mutex field to node.h) (i.e., tutorial 2 "has" to follow tutorial 1), OR should I make it such that you could jump in and do any individual tutorial and it is a stand-alone thing?
+    --> parts may be a bit repetitive tutorial to tutorial, but could be nice to be more modular ??
 
 1. First create method `verify_traversal(nodeptr prev, nodeptr curr, bool left)`
 
 2. Go through each method and remove HoH mutex calls -- to --> only lock prev and curr and then call verify_traversal()
 
+## Tutorial 3: Lock-free BST [ TUTORIAL IMPL & WRITE-UP NOT YET COMPLETED ]
 
 ## Authors
 
