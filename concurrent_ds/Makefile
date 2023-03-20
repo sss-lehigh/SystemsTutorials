@@ -27,9 +27,9 @@ opt_tutorial:
 	$(CC) $(CFLAGS) -o opt_tutorial -DOPTIMISTIC_LOCKING_TUTORIAL -I common main.cpp bst_tutorial/optimistic_locking/opt_bst.cpp
 
 clean:
-	if [ -f main_hoh ]; then rm main_hoh; fi
-	if [ -f main_opt ]; then rm main_opt; fi
-	if [ -f main_seq ]; then rm main_seq; fi
+	if [ -f hoh ]; then rm hoh; fi
+	if [ -f opt ]; then rm opt; fi
+	if [ -f seq ]; then rm seq; fi
 	if [ -f seq_tutorial ]; then rm seq_tutorial; fi
 	if [ -f hoh_tutorial ]; then rm hoh_tutorial; fi
 	if [ -f opt_tutorial ]; then rm opt_tutorial; fi

@@ -10,17 +10,18 @@
 
 using namespace std;
 
-BST::BST() {
-    Node* sentinel_beg = new Node(SENTINEL);
-    root = sentinel_beg;
-    addSentinels(sentinel_beg);
-}
 
 void addSentinels(Node* node) {
     Node* left_sentinel = new Node(SENTINEL);
     Node* right_sentinel = new Node(SENTINEL);
     node->left = left_sentinel;
     node->right = right_sentinel;
+}
+
+BST::BST() {
+    Node* sentinel_beg = new Node(SENTINEL_BEG);
+    root = sentinel_beg;
+    addSentinels(sentinel_beg);
 }
 
 /**

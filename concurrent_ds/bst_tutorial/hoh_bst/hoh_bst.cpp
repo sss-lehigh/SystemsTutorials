@@ -34,38 +34,38 @@ bool BST::insert(int key) {
         return true;
     }
 
-    nodeptr prev = NULL;
+    nodeptr parent = NULL;
     nodeptr curr = root;
 
     // search for the key to insert
     while (curr) {
         if (curr->key > key) {
-            prev = curr;
+            parent = curr;
             curr = curr->left;
         } else if (curr->key < key) {
-            prev = curr;
+            parent = curr;
             curr = curr->right;
         }
         // key is already present
         else
             return false;
     }
-    // key not found -> prev points to the leaf node that will be the parent of the new node
+    // key not found -> parent points to the leaf node that will be the parent of the new node
 
     // create the new node, and add it to the tree
     Node* node = new Node(key);
-    // determine if the new node should be the L or R child of its parent (prev)
-    if (prev->key > key)
-        prev->left = node;
+    // determine if the new node should be the L or R child of its parent (parent)
+    if (parent->key > key)
+        parent->left = node;
     else
-        prev->right = node;
+        parent->right = node;
     
     return true;
 }
 
 // return the root if success, NULL if root is null / key not present
 bool BST::remove(int key) {
-    nodeptr prev = NULL;
+    nodeptr parent = NULL;
     nodeptr curr = root;
 
     if (root == NULL)
@@ -74,11 +74,11 @@ bool BST::remove(int key) {
     // find node to remove
     while (curr) {
         if (curr->key > key) {
-            prev = curr;
+            parent = curr;
             curr = curr->left;
         }
         else if (curr->key < key) {
-            prev = curr;
+            parent = curr;
             curr = curr->right;
         } else
             break;
@@ -100,20 +100,16 @@ bool BST::remove(int key) {
             newCurr = curr->left;
 
         // check if we are deleting the root
-        if (prev == NULL) {
+        if (parent == NULL) {
             root = newCurr;
             return true;
         }
 
-        // reset prev accordingly
-        if (curr == prev->left)
-            prev->left = newCurr;
+        // reset parent accordingly
+        if (curr == parent->left)
+            parent->left = newCurr;
         else
-            prev->right = newCurr;
-
-        // free memory of curr
-        delete curr;
-
+            parent->right = newCurr;
     }
     // node to remove has two children
     else {
@@ -138,8 +134,6 @@ bool BST::remove(int key) {
 
         // change the data in which curr points to
         curr->key = temp->key;
-        // delete temp which points to the node whose data we moved to the "true" node to be deleted
-        delete temp;
     }
     return true;
 }
