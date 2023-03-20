@@ -1,11 +1,10 @@
 # Concurrent Data Structures Tutorial
 
-(see here: https://gist.github.com/DomPizzie/7a5ff55ffa9081f2de27c315f5018afc)
 This repo is meant to serve as a tutorial to learn how to implement concurrent data structures.
 
 ## Description
 
-Use this repo to learn how to transform a sequential data structure to a multi-threaded, concurrent one using three different techniques: (1) hand-over-hand locking, (2) optimistic locking, and (3) a lock-free technique. This first section provides information on how to get started with the codebase, including describing important directories, and building and running executables. The next section contains the actual tutorials.
+Use this repo to learn how to transform a sequential binary search tree (BST) data structure to a multi-threaded, concurrent one using three different techniques: (1) hand-over-hand locking, (2) optimistic locking, and (3) a lock-free technique. This first section provides information on how to get started with the codebase, including describing important directories, and building and running executables. The next section contains the actual tutorials.
 
 ## Getting Started
 
@@ -130,7 +129,7 @@ We are now ready to make modifications to the code.
     ``` 
     
     Replace the constructor with logic which accomplishes the following: (1) create a node with key `SENTINEL_BEG`, (2) set the root equal to this new node, and (3) call addSentinels(), passing in the new node to create its sentinels. After completing this, the abstract state of the structure looks like the following, where "s_beg" is the beginning sentinel:
-    ![Alt text](base_bst.jpg)
+    ![Alt text](base_bst.png)
 
     Note that throughout the tutorial, the beginning sentinel is referred to as the "root" of the tree, and `root->right` is referred to as the "true root" of the tree.
 
