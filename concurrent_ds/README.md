@@ -176,7 +176,7 @@ We are now ready to make modifications to the code.
 
 You have now created a HoH locking-based concurrent implementation of a binary search tree contains operation. Both the insert() and remove() methods require traversal of the data structure, and you will be asked to implement the changes we just made to contains() similarly in insert() and remove().
 
-5. Now we will implement the insert() method.
+5. Now we will modify the insert() method.
 
     __a)__ First, remove checking for the existence of the root (lines 32-35). The subsequent lines set parent and curr. Modify these lines to match how we initially set and locked the same two variables in the contains() method.
 
@@ -192,7 +192,7 @@ You have now created a HoH locking-based concurrent implementation of a binary s
 
 6. Finally, we must modify the remove() method.
 
-    __a)__ Repeat steps 5a)-c) for remove(), but refer to lines 71-72 in step a instead of the ones written in 5a).
+    __a)__ Repeat steps 5a)-c) for remove(), but refer to lines 71-72 instead of the ones written in 5a).
     
     __b)__ Modify the if statement after the while loop (line 88) to check if curr's key is `SENTINEL`. Be sure to unlock parent and curr before returning false in this if statement.
 
@@ -202,7 +202,7 @@ You have now created a HoH locking-based concurrent implementation of a binary s
     
     Replace all instances where we check for a NULL value with checking for a SENTINEL value for the key of the node being checked (lines 97, 103). Note that in line 103 we should be checking if the parent's key is equal to `SENTINEL_BEG` specifically. Additionally, be sure to unlock parent and curr before returning true, in the case that the if statement is entered.
 
-    __e)__ Now let's move to the else block. In this case, the node being removed has two children, meaning we must discover it's in-order successor to replace the node being removed, in order to maintain the BST properties. Since any concurrent processes who need to follow the same path in the tree are halted by the parent and curr being locked, we must only ensure that there are no other concurrent processes modifing the subtree that contains the in-order successor. Therefore, if we can lock every node in the path to the successor, we know it is safe to replace it.
+    __e)__ Now let's move to the else block. In this case, the node being removed has two children, meaning we must discover it's in-order successor to replace the node being removed, in order to maintain the BST properties. Since any concurrent processes who need to follow the same path in the tree are halted by the parent and curr being locked, we must only ensure that there are no other concurrent processes who have already passed parent and curr, and are modifing a node in the path through the subtree to the in-order successor. Therefore, if we can lock every node in the path to the in-order successor, we know it is safe to replace it.
     
     So, after setting temp, lock the node. Then, modify the while loop such that it first unlocks temp, and then locks temp again after re-setting it.
 
@@ -222,14 +222,12 @@ You have now created a HoH locking-based concurrent implementation of a binary s
 
     Plot the results.
 
-    You will notice that the sequential version actually outperforms the hand-over-hand locking version, even with 8 threads. As a matter of fact, as the number of threads increases, the hand over hand locking binary search tree begins to lower in total throughput. This is due to the extremely high cost of traversing, since we must exclusively lock every node in the traversal. As the threads scale, the cost of contention outweighs the performance benefit that is able to be achieved by introducing more threads in the first place. A solution that would mitigate this issue would be to use a readers-writers lock, so threads can traverse the same nodes in parallel, and only exclusively lock nodes when they need to modify them.
-    
-    As an extension to this tutorial, you could try modifying the HoH locking solution you just created to use a R/W lock, and see how the performance improves. Note that you will need to be sure to not introduce deadlock (always lock and unlock nodes in the same order).
+    You will notice that the sequential version actually outperforms the hand-over-hand locking version, even with 8 threads. As a matter of fact, as the number of threads increases, the hand over hand locking binary search tree begins to lower in total throughput. This is due to the extremely high cost of traversing, since we must exclusively lock every node in the traversal. As the threads scale, the cost of contention outweighs the performance benefit that is able to be achieved by introducing more threads in the first place. A solution that would mitigate this issue would be to use a reader/writer (R/W) lock, so threads can traverse the same nodes in parallel, and only exclusively lock nodes when they need to modify them. As an extension to this tutorial, you could try modifying the HoH locking solution you just created to use a R/W lock instead, and see how the performance improves. Note that you will need to be sure to not introduce deadlock (always lock and unlock nodes in the same order).
 
-    Tutorials 3 and 4 will build off of the plot we just produced, and will exemplify concurrency techniques which DO benefit from the use of increasing threads.
+    Tutorials 3 and 4 will add to the plot we just produced, and will exemplify concurrency techniques which DO benefit from the use of increasing numbers of threads.
 
 
-    TODO: keep this as a "bad" example of a concurrent impl, and just mention that using a R/W lock would improve this? Or change to R/W lock?
+    TODO: should I keep this as a "bad" example of a concurrent impl, and just mention that using a R/W lock would improve this? Or change to R/W lock?
 
 
 ## Optimistic locking [ TUTORIAL WRITE-UP NOT YET COMPLETED ]
