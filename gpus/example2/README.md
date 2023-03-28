@@ -9,7 +9,7 @@ It is also used in a variety of settings ranging from:
 
 The problem consists of iterating through the vectors x and y and summing the product.
 
-In order to parallelize this problem on modern hardware, we typically use a map followed by the parallel pattern called reduce. 
+In order to parallelize this problem on modern hardware, we typically use a [map](../docs/Map.md) followed by the parallel pattern called [reduce](../docs/Reduce.md). 
 Reduce will take the output of our code and combine it using some kind of operation (for example plus).
 
 For example when performing:  `[10 11] dot [1 2]` we could map the first index to a thread and the second index to a second thread.

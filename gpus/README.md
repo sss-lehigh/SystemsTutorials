@@ -16,9 +16,18 @@ This tutorial uses CUDA and TBB to demonstrate how to use GPUs and what it means
 - [example3](example3/)
     - example of how to write a parallel group by and agregation on both CPUs and GPUs
     - compiles to example3\_groupby
+    - This is an extra example that is not needed before trying your hand at GPU parallelism
 
 Each of these examples have a `README.md` explaining the code and the example code has comments
 explaining what is going on in the code.
+
+## What You Should Do
+
+- Compile the code
+- Test the system example
+- Read the README of example1 and read through the example1 code
+- Read the README of example2 and read through the code
+- Do [you try](you_try/)
 
 ## Compiling
 
@@ -33,4 +42,14 @@ Next make a directory called build (`mkdir build`). Navigate to this directory (
 In this directory run `conan install .. --build=missing` and then `cmake ..`. After this run make using `make -j`.
 At this point you will have compiled the binaries in build and be able to run them.
 Run `ls` to see the binaries.
+
+## Learning Parallel Patterns
+
+In the `docs` folder there are markdown files explaining how to use parallel patterns. This includes:
+
+- [map](docs/Map.md) which is a parallel pattern used to perform data parallel execution
+- [map on gpu](docs/MapOnGPU.md) describes how to use the map pattern on a GPU
+- [reduce](docs/Reduce.md) describes the reduce parallel pattern and map-reduce
+
+
 

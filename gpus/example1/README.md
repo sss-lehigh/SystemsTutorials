@@ -13,7 +13,7 @@ On CPUs and GPUs we deal typically will parallelize this problem across hardware
 A thread shares memory with other threads in a process, but executes in parallel. 
 By dividing a task across multiple threads we are able to execute in parallel and speedup our processing.
 
-In order to parallelize this problem on modern hardware, we typically use a parallel pattern called map. When performing a map we break 
+In order to parallelize this problem on modern hardware, we typically use a parallel pattern called [map](../docs/Map.md). When performing a map we break 
 down the operation we need to perform into smaller computations which we then map to each thread we have.
 
 For example when performing:  `1.0 * [10 11] + [1 2]` we could map the first index to a thread and the second index to a second thread.
