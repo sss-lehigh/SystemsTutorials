@@ -53,7 +53,7 @@ You can transform the vectors into thrust host and device vectors.
 <summary>
 Hint 3
 </summary>
-`std::itoa` is similar to `thrust::sequence` 
+<code>std::itoa</code> is similar to <code>thrust::sequence</code> 
 </details>
 
 <details>
