@@ -9,9 +9,6 @@
 #include <thrust/host_vector.h>
 #include <thrust/transform.h>
 
-template<typename T>
-using vector = thrust::host_vector<T>;
-
 // kernel function to perform vector c = alpha * a + b
 // size is the size of the vectors
 // __restrict__ tells the compiler a, b, and c will not
@@ -28,9 +25,9 @@ int main() {
 
 
     // we will create size element vectors with entries of zero
-    vector<float> a(size, 0);
-    vector<float> b(size, 0);
-    vector<float> c(size, 0);
+    thrust::host_vector<float> a(size, 0);
+    thrust::host_vector<float> b(size, 0);
+    thrust::host_vector<float> c(size, 0);
 
     // std::tranform reads from the range a.cbegin() to a.cend()
     // and will write the result out iteratively to a.begin()
@@ -63,7 +60,7 @@ int main() {
     // -------------------------------------------------------------------------------------------------------
 
     // we create another vector to output to
-    vector<float> c2(size, 0);
+    thrust::host_vector<float> c2(size, 0);
 
     start = std::chrono::high_resolution_clock::now();
 

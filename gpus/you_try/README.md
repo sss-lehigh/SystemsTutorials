@@ -28,3 +28,39 @@ Your code will be output as `your_solution`. Compare the initial runtimes of `yo
 and `solution` to see how much performance you can gain by parallelizing this problem on
 the GPU.
 
+## Hints
+
+<details>
+<summary>
+Hint 1
+</summary>
+<p>
+Transformation is already device code. You can execute it on the GPU.
+</p>
+</details>
+
+<details>
+<summary>
+Hint 2
+</summary>
+<p>
+You can transform the vectors into thrust host and device vectors.
+</p>
+</details>
+
+
+<details>
+<summary>
+Hint 3
+</summary>
+<code>std::itoa</code> is similar to <code>thrust::sequence</code> 
+</details>
+
+<details>
+<summary>
+Hint 4
+</summary>
+<p>
+You can combine the transform and reduce into one call or switch them to their thrust counterparts with device vectors
+</p>
+</details>

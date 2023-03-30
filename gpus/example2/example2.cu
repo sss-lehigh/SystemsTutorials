@@ -15,16 +15,12 @@
 // dot product
 // we do sum a_i * b_i
 
-// Using vector type thrust::host_vector<T>
-template<typename T>
-using vector = thrust::host_vector<T>;
-
 int main() {
     // creating our vectors x and y of size
     const int size = 1000000;
 
-    vector<float> x(size, 0);
-    vector<float> y(size, 0);
+    thrust::host_vector<float> x(size, 0);
+    thrust::host_vector<float> y(size, 0);
     
     thrust::device_vector<float> x_device(x.size());
     thrust::device_vector<float> y_device(y.size());
@@ -36,6 +32,8 @@ int main() {
         y[i] = rand() / static_cast<float>(RAND_MAX);
     }
 
+    // ------------- C++ Sequential -------------------------------------
+
     // sequential execution for reference, we do plus as our reduction and times as our map
     auto start = std::chrono::high_resolution_clock::now();
     float reference = std::transform_reduce(std::execution::seq, x.begin(), x.end(), y.begin(), 0.0f, [](float x, float y) {
@@ -45,8 +43,10 @@ int main() {
             });
     auto end = std::chrono::high_resolution_clock::now();
 
-    std::cout << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
+    std::cout << "Sequential: " << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
 
+    // ------------- C++ Parallel -------------------------------------
+    
     // execute in parallel using the C++ standard library similar to example 1
     start = std::chrono::high_resolution_clock::now();
     float val = std::transform_reduce(std::execution::par_unseq, x.begin(), x.end(), y.begin(), 0.0f, [](float x, float y) {
@@ -56,12 +56,15 @@ int main() {
             });
     end = std::chrono::high_resolution_clock::now();
 
+    // check if we differ by more than 1e-3 of the result
     if(std::abs(val - reference) > std::abs(reference * 1e-3)) {
         std::cerr << "Result is off by more than 1e-3 tolerance " << val << " " << reference << std::endl;
     }
 
-    std::cout << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
+    std::cout << "Parallel: " << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
 
+    // ------------- Thrust -------------------------------------
+    
     // We create two lambdas and mark them as executable on both the host and the device
     auto times = [] __host__ __device__ (thrust::tuple<float, float> x) -> float {
                         return thrust::get<0>(x) * + thrust::get<1>(x);
@@ -74,7 +77,7 @@ int main() {
     
     start = std::chrono::high_resolution_clock::now();
 
-    // copy memory to the GPU
+    // Explicitly copy memory to the GPU through a vector copy
     thrust::copy(x.begin(), x.end(), x_device.begin());
     thrust::copy(y.begin(), y.end(), y_device.begin());
 
@@ -92,7 +95,7 @@ int main() {
         std::cerr << "Result is off by more than 1e-3 tolerance " << val << " " << reference << std::endl;
     }
 
-    std::cout << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
+    std::cout << "GPU: " << std::chrono::duration<double>(end - start).count() * 1e3 << " ms" << std::endl;
 
     return 0;
 }

@@ -1,7 +1,7 @@
 # Example 3: Group By
 
 Group by is a relational algebra operation used by databases for
-proccessing and agregating data.
+processing and agregating data.
 
 For example in this we consider a coffee buisness which has locations
 in multiple cities. This database stores records of the location and
