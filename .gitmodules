@@ -1,0 +1,4 @@
+[submodule "rdma/rome"]
+	path = rdma/rome
+	url = https://github.com/amandabaran/rome.git
+	branch = sss-amanda
