@@ -52,4 +52,8 @@ In the `docs` folder there are markdown files explaining how to use parallel pat
 - [reduce](docs/Reduce.md) describes the reduce parallel pattern and map-reduce
 
 
+## Sunlab
 
+For Lehigh students who want to compile for sunlab, use the Dockerfile to build with `docker build -t sunlab .`. After this run with `docker run -v$(pwd):/root/tmp -it sunlab`.
+Copy the resulting tar.gz file output to `/root/tmp`. After this exit the container and scp this tar.gz file to sunlab. Extract and unzip the file (`tar xzf <file>`). After this
+you can run the code in the resulting `bin` folder. If you modify the code on your local machine you must copy this procedure again to get results on sunlab.

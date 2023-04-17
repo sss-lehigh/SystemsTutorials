@@ -36,3 +36,10 @@ target_compile_options(solution PUBLIC "--expt-extended-lambda")
 add_executable(your_solution you_try/program_here.cu)
 target_link_libraries(your_solution PUBLIC TBB::tbb)
 target_compile_options(your_solution PUBLIC "--expt-extended-lambda")
+
+
+install(TARGETS image_process_cpu image_process_gpu example1_saxpy example2_dot
+                example3_groupby solution your_solution
+                RUNTIME DESTINATION bin)
+include(CPack)
+
