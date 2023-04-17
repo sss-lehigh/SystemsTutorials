@@ -4,20 +4,22 @@
 #include "List.h"
 #include <string>
 
-class ConcurrentDoublyLinkedList : public List {
+class ConcurrentSortedDoublyLinkedList : public List {
 public:
-  ConcurrentDoublyLinkedList() : List(){};
+  ConcurrentSortedDoublyLinkedList() : List(){};
+
+  void insertNode(/* with */ int key) override;
+  void deleteNode(/* with */ int key) override;
+  std::optional<Node *> containsNode(/* with */ int key) const override;
 
   void setHead(Node *newHead) {
     head = newHead;
     newHead->previous = nullptr;
   }
 
-  static void setTail(Node *newTail) { newTail->next = nullptr; }
-
-  void insertNode(/* with */ int content, /* afterNodeWith */ int immediatelyPrecedingContent) const;
-  void appendNode(/* with */ int content);
-  void deleteFirstNode(/* with */ int content);
+  static void setTail(Node *newTail) {
+    newTail->next = nullptr;
+  }
 };
 
 #endif // TRANSACTIONAL_MEMORY_CONCURRENTLINKEDLIST_H

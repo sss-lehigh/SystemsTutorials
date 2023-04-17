@@ -4,15 +4,18 @@
 #include <cassert>
 #include <iostream>
 #include <string>
+#include <optional> // std::optional
 #include "Node.h"
 
 class List {
-  friend class DoublyLinkedList;
-  friend class ConcurrentDoublyLinkedList;
+  friend class SortedDoublyLinkedList;
+  friend class ConcurrentSortedDoublyLinkedList;
 
   Node *head;
   [[nodiscard]] Node *getTail() const {
-    if (head == nullptr) { return nullptr; }
+    if (head == nullptr) {
+      return nullptr;
+    }
     auto currentNode = head;
     while (!currentNode->isTail()) {
       currentNode = currentNode->next;
@@ -24,9 +27,22 @@ public:
   List() = default;
 
 public:
+  virtual void insertNode(/* with */ int key) {
+    assert(false && "this method should be overridden by a subclass");
+  }
+  virtual void deleteNode(/* with */ int key) {
+    assert(false && "this method should be overridden by a subclass");
+  }
+  [[nodiscard]] virtual std::optional<Node*> containsNode(/* with */ int key) const {
+    assert(false && "this method should be overridden by a subclass");
+  }
+
+  [[nodiscard]] virtual bool isEmpty() const { return head == nullptr; }
+
+public:
   class Operation {
   public:
-    enum BackingStorage { Insert, Append, Delete };
+    enum BackingStorage { Insert, Delete };
 
   private:
     BackingStorage backingStorage;
@@ -43,12 +59,8 @@ public:
   public:
     [[nodiscard]] constexpr std::string_view description() const {
       switch (backingStorage) {
-      case Insert:
-        return "insert";
-      case Append:
-        return "append";
-      case Delete:
-        return "delete";
+      case Insert: return "insert";
+      case Delete: return "delete";
       }
     }
   };
@@ -77,46 +89,34 @@ public:
     auto currentNode = head;
     if (currentNode != nullptr) {
       while (!currentNode->isTail()) {
-        partialDescription += std::to_string(currentNode->content) + " ⇄ ";
+        partialDescription += std::to_string(currentNode->key) + " ⇄ ";
         currentNode = currentNode->next;
       }
-      partialDescription += std::to_string(currentNode->content);
+      partialDescription += std::to_string(currentNode->key);
     }
     return partialDescription;
   }
 
   void report(OperationStatus status,
               /* of */ Operation operation,
-              /* with */ int content,
-              int immediatelyPrecedingContent = 0) const {
+              /* onNodeWith */ int key) const {
     switch (status) {
     case OperationStatus::InProgress:
       std::cout << "attempting to " << operation.description()
-                << " " << (operation == Operation::Delete ? "first" : "") << " node with content '" << content << "'";
-      if (operation == Operation::Insert) {
-        std::cout << " immediately after that with content '" << immediatelyPrecedingContent << "'";
-      }
-      std::cout << std::endl;
-      return;
+                << " node with key '" << key << "'"
+                << std::endl; return;
     case OperationStatus::Success:
       std::cout << operation.description()
-                << (operation == Operation::Delete ? "d first" : "ed") << " node with content '" << content << "'";
-      if (operation == Operation::Append) {
-        std::cout << " to end of list";
-      } else if (operation == Operation::Insert) {
-        std::cout << " after node with content '" << immediatelyPrecedingContent << "'";
-      }
-      std::cout << std::endl;
-      break;
+                << (operation == Operation::Delete ? "d" : "ed")
+                << " node with key '" << key << "'"
+                << std::endl; break;
     case OperationStatus::Failure:
-      assert(operation != Operation::Append && "cannot fail to append node");
-      std::cout << "no node with content '" << (operation == Operation::Delete ? content : immediatelyPrecedingContent)
-                << "' to " << operation.description();
-      if (operation == Operation::Insert) {
-        std::cout << " after";
+      std::cout << "node with key '" << key << "' ";
+      switch (operation) {
+      case Operation::Insert: std::cout << "already exists"; break;
+      case Operation::Delete: std::cout << "not found";      break;
       }
-      std::cout << std::endl;
-      break;
+      std::cout << std::endl; break;
     }
 
     std::cout << "current list: " << description() << std::endl << std::endl;
