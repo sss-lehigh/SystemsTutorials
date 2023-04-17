@@ -1,51 +1,63 @@
 #include "LinkedList.h"
 
-void DoublyLinkedList::insertNode(/* with */ int content,
-                                  /* afterNodeWith */ int immediatelyPrecedingContent) const {
-  report(OperationStatus::InProgress, Operation::Insert, /* content */ content, immediatelyPrecedingContent);
-  auto currentNode = head;
-  while (currentNode != nullptr && currentNode->content != immediatelyPrecedingContent) {
-    currentNode = currentNode->next;
+void SortedDoublyLinkedList::insertNode(int key) {
+  report(OperationStatus::InProgress, Operation::Insert, key);
+
+  if (containsNode(key).has_value()) {
+    report(OperationStatus::Failure, Operation::Insert, key);
+    return;
   }
-  if (currentNode == nullptr) {
-    report(OperationStatus::Failure, Operation::Insert, /* content */ content, immediatelyPrecedingContent);
+
+  auto newNode = new Node(key);
+
+  if (isEmpty()) {
+    head = newNode;
+    report(OperationStatus::Success, Operation::Insert, key);
   } else {
-    auto newNode = new Node(content);
+    auto currentNode = head;
+    while (!currentNode->isTail() && currentNode->next->key < key) {
+      currentNode = currentNode->next;
+    }
+
     if (!currentNode->isTail()) { newNode->setNext(currentNode->next); }
     newNode->setPrevious(currentNode);
-    report(OperationStatus::Success, Operation::Insert, /* content */ newNode->content, /* immediatelyPrecedingContent */ currentNode->content);
   }
+
+  report(OperationStatus::Success, Operation::Insert, key);
 }
 
-void DoublyLinkedList::appendNode(/* with */ int content) {
-  report(OperationStatus::InProgress, Operation::Append, content);
-  auto newNode = new Node(content);
-  auto tail = getTail();
-  if (tail == nullptr) {
-    head = newNode;
+void SortedDoublyLinkedList::deleteNode(int key) {
+  report(OperationStatus::InProgress, Operation::Delete, key);
+
+  auto optionalNode = containsNode(key);
+  if (!optionalNode.has_value()) {
+    report(OperationStatus::Failure, Operation::Delete, key);
   } else {
-    tail->setNext(newNode);
+    auto node = optionalNode.value();
+    if (node->isHead()) {
+      setHead(node->next);
+    } else if (node->isTail()) {
+      setTail(node->previous);
+    } else {
+      node->previous->setNext(node->next);
+    }
+    delete node;
+
+    report(OperationStatus::Success, Operation::Delete, key);
   }
-  report(OperationStatus::Success, Operation::Append, newNode->content);
 }
 
-void DoublyLinkedList::deleteFirstNode(/* with */ int content) {
-  report(OperationStatus::InProgress, Operation::Delete, content);
+std::optional<Node *> SortedDoublyLinkedList::containsNode(int key) const {
+  if (isEmpty()) { return std::nullopt; }
+
   auto currentNode = head;
-  while (currentNode != nullptr && currentNode->content != content) {
+  while (!currentNode->isTail() && currentNode->key < key) {
     currentNode = currentNode->next;
   }
-  if (currentNode == nullptr) {
-    report(OperationStatus::Failure, Operation::Delete, content);
+
+  if (currentNode->key == key) {
+    return currentNode;
   } else {
-    if (currentNode->isHead()) {
-      setHead(currentNode->next);
-    } else if (currentNode->isTail()) {
-      setTail(currentNode->previous);
-    } else {
-      currentNode->previous->setNext(currentNode->next);
-    }
-    delete currentNode;
-    report(OperationStatus::Success, Operation::Delete, content);
+    return std::nullopt;
   }
 }

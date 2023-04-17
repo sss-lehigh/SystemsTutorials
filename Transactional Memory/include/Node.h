@@ -6,9 +6,9 @@ public:
   // We use pointers instead of optionals for dramatic effects.
   Node *previous = nullptr;
   Node *next = nullptr;
-  int content;
+  int key;
 
-  explicit Node(int content) : content(content) {}
+  explicit Node(int content) : key(content) {}
 
   void setPrevious(Node *newPrevious) {
     previous = newPrevious;

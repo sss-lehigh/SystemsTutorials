@@ -5,20 +5,14 @@
 #include "LinkedList.h"
 #include "Random.h"
 
-using LinkedList = DoublyLinkedList;
+using LinkedList = SortedDoublyLinkedList;
 
-void mutate(/* on */ LinkedList &list, /* slowDown */ int milliseconds) {
+void mutate(/* on */ LinkedList &list, /* slowDown */ unsigned int milliseconds) {
   switch (randomOperation()) {
   case LinkedList::Operation::Insert:
-    list.insertNode(/* with */ randomValue(),
-                    /* afterNodeWith */ randomValue());
-    break;
-  case LinkedList::Operation::Append:
-    list.appendNode(/* with */ randomValue());
-    break;
+    list.insertNode(/* with */ randomValue()); break;
   case LinkedList::Operation::Delete:
-    list.deleteFirstNode(/* with */ randomValue());
-    break;
+    list.deleteNode(/* with */ randomValue()); break;
   }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
