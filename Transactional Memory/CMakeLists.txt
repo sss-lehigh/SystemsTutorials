@@ -11,3 +11,7 @@ add_executable(concurrent-linked-list concurrent-linked-list-main.cpp)
 target_include_directories(concurrent-linked-list PRIVATE include/)
 target_sources(concurrent-linked-list PRIVATE src/ConcurrentLinkedList.cpp)
 
+add_executable(transactional-memory-concurrent-linked-list transactional-memory-concurrent-linked-list-main.cpp)
+target_include_directories(transactional-memory-concurrent-linked-list PRIVATE include/)
+target_sources(transactional-memory-concurrent-linked-list PRIVATE src/LinkedList.cpp)
+set_target_properties(transactional-memory-concurrent-linked-list PROPERTIES COMPILE_FLAGS "-ftm-ts")
