@@ -9,12 +9,15 @@
 using LinkedList = SortedDoublyLinkedList;
 
 void mutate(/* on */ LinkedList &list, /* slowDown */ unsigned int milliseconds) {
+  auto operation = randomOperation();
+  auto key = randomValue();
+
   /* atomic do */ {
-    switch (randomOperation()) {
+    switch (operation) {
     case LinkedList::Operation::Insert:
-      list.insertNode(/* with */ randomValue()); break;
+      list.insertNode(/* with */ key); break;
     case LinkedList::Operation::Delete:
-      list.deleteNode(/* with */ randomValue()); break;
+      list.deleteNode(/* with */ key); break;
     }
   }
 

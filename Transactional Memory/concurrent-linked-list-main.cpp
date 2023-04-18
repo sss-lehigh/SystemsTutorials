@@ -9,11 +9,14 @@
 using LinkedList = ConcurrentSortedDoublyLinkedList;
 
 void mutate(/* on */ LinkedList &list, /* slowDown */ unsigned int milliseconds) {
-  switch (randomOperation()) {
+  auto operation = randomOperation();
+  auto key = randomValue();
+
+  switch (operation) {
   case LinkedList::Operation::Insert:
-    list.insertNode(/* with */ randomValue()); break;
+    list.insertNode(/* with */ key); break;
   case LinkedList::Operation::Delete:
-    list.deleteNode(/* with */ randomValue()); break;
+    list.deleteNode(/* with */ key); break;
   }
 
   std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
