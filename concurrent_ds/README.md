@@ -247,7 +247,16 @@ You have now created a HoH locking-based concurrent implementation of a binary s
 
 This tutorial implements optimistic locking to provide concurrency control for the binary search tree. Unlike hand-over-hand locking, optimistic locking traverses the data structure without using locks, and only locks the nodes that are part of the critical path (i.e., where modifications will occur). However, to avoid safety issues that could be produced from this design, after locking the nodes in the critical path, we must verify that the traversal is still valid before we can continue. Confirming that the traversal is valid means verifying that we can still traverse to the nodes we have locked.
 
-1. First create method `verify_traversal`:
+This tutorial modifies files in the `bst_tutorial/optimistic_locking` directory. Each of the three files in `bst_tutorial/optimistic_locking` currently contains the code for HoH locking that we previously created in tutorial 1. In this tutorial, we will modify the HoH locking approach to use optimistic locking instead.
+
+1. Open the file `opt_node_tutorial.h`. We no longer need a shared lock, so modify the lock (line 25) to be of type "mutex" instead of "shared_mutex." 
+
+2. Note that we don't need to make any modifications to the `opt_bst_tutorial.h`, but you may want to look it over to recall what is defined.
+
+3. Open file `opt_bst_tutorial.cpp` which is where the remainder of modifications will occur.
+
+__a)__
+create method `verify_traversal`:
 
 2. Go through each method and remove HoH mutex calls -- to --> only lock prev and curr and then call verify_traversal()
 

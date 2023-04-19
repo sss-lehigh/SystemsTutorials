@@ -5,9 +5,8 @@
  * Created on February 2, 2023
  */
 #include <iostream>
-#include "hoh_node.h"
+#include "opt_node_tutorial.h"
 
-// NOTE: alternatively could add a "type" field to the node to allow for negative keys
 #define SENTINEL -1
 #define SENTINEL_BEG -2
 
