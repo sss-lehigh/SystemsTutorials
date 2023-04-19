@@ -187,25 +187,56 @@ You have now created a HoH locking-based concurrent implementation of a binary s
 
     __a)__ First, remove checking for the existence of the root (lines 32-35). The subsequent lines set parent and curr. Modify these lines to match how we initially set and locked the same two variables in the contains() method, also in shared access mode.
 
-    __b)__ Modify the while loop to check for curr's key being not equal to `SENTINEL` (the same as in contains()).
+    __b)__ Next, paste in the following code which adds the root to the tree if the tree is empty. This code should be placed after setting parent but before setting curr, since if there is no root yet, then parent->right is NULL:
+    ```c++
+    if (parent->right->key == SENTINEL) {
+        parent->mtx.unlock_shared();
+        parent->mtx.lock(); // lock in exclusive mode, then determine if we still need to add first element
+        if (parent->right->key == SENTINEL) {
+            // sentinel_beg's right sentinel becomes the "true root"
+            parent->right->key = key;
+            // add sentinels to the true root
+            addSentinels(parent->right);
+            parent->mtx.unlock();
+            return true;
+        }
+        // if another thread beat us to inserting the root, unlock in exclusive mode, and re-lock in shared mode
+        parent->mtx.unlock();
+        parent->mtx.lock_shared();
+    }
+    ```
 
-    __c)__ Modify the contents of the while loop. Specifically, apply the same locking logic used in contains for each if statement (including the "else" statement... and what do we need to unlock before returning?). All locking should be done in shared access mode.
+    __c)__ Modify the while loop to check for curr's key being not equal to `SENTINEL` (the same as in contains()).
 
-    __d)__ Recall that if we exit the while loop, it means that the key was not found in the tree, and we can insert it. Additionally, curr points to the sentinel node where we should add the key. First, unlock parent and curr from the shared access mode, and re-lock them in exclusive mode since we will now modify them:
+    __d)__ Modify the contents of the while loop. Specifically, apply the same locking logic used in contains for each if statement (including the "else" statement... and what do we need to unlock before returning?). All locking should be done in shared access mode.
+
+    __e)__ Recall that if we exit the while loop, it means that the key was not found in the tree, and we can insert it. Additionally, curr points to the sentinel node where we should add the key. First, unlock parent and curr from the shared access mode, and re-lock them in exclusive mode since we will now modify them:
     ```c++
     parent->mtx.unlock_shared();
-    curr->mtx.unlock_shared();
     parent->mtx.lock();
+    curr->mtx.unlock_shared();
     curr->mtx.lock();
     ```
     
     We no longer need to create a new node, so you can remove line 56. You can additionally remove lines 57-61.
     
-    Instead, we will replace curr's key (which is currently `SENTINEL`) with the new key we are inserting, and then we will call addSentinels() on this "new" (really, modified) node. Be sure to unlock parent and curr, and then return True.
+    Instead, we will replace curr's key (which is currently `SENTINEL`) with the new key we are inserting, and then we will call addSentinels() on this "new" (really, modified) node. Be sure to unlock parent and curr, and then return True:
+    ```c++
+    // curr is now the sentinel that we want to replace with the new node
+    curr->key = key;
+    // add sentinels to the new node
+    addSentinels(curr);
+
+    // unlock
+    curr->mtx.unlock();
+    parent->mtx.unlock();
+    
+    return true;
+    ```
 
 6. Finally, we must modify the remove() method.
 
-    __a)__ Repeat steps 5a)-c) for remove(), but refer to lines 71-72 instead of the ones written in 5a).
+    __a)__ Repeat steps 5a), 5c) and 5d) for remove(), but refer to lines 71-72 and the while statement in line 75 instead of the ones written in 5a).
     
     __b)__ Modify the if statement after the while loop (line 88) to check if curr's key is `SENTINEL`. Be sure to unlock parent and curr before returning false in this if statement.
 
@@ -217,9 +248,19 @@ You have now created a HoH locking-based concurrent implementation of a binary s
 
     __e)__ Now let's move to the else block. In this case, the node being removed has two children, meaning we must discover it's in-order successor to replace the node being removed, in order to maintain the BST properties. Since any concurrent processes who need to follow the same path in the tree are halted by the parent and curr being locked, we must only ensure that there are no other concurrent processes who have already passed parent and curr, and are modifing a node in the path through the subtree to the in-order successor. Therefore, if we can lock every node in the path to the in-order successor, we know it is safe to replace it.
     
-    So, after setting temp, lock the node. Then, modify the while loop such that it first unlocks temp, and then locks temp again after re-setting it.
+    So, after setting temp (line 120), lock the node. Then, modify the while loop such that it first unlocks temp, and then locks temp again after re-setting it:
+    ```c++
+    temp = curr->right;
+    temp->mtx.lock();
+    while (temp->left->key != SENTINEL) {
+        temp->mtx.unlock();
+        p = temp;
+        temp = temp->left;
+        temp->mtx.lock();
+    }
+    ```
 
-    Finally, be sure to unlock temp after changing the data in which curr points to.
+    Finally, be sure to unlock temp after changing the data in which curr points to (i.e., after line 136, but before exiting the else statement).
 
     __f)__ The final modification is to unlock the parent and curr before returning true (i.e., immedietely before line 138).
 
@@ -251,14 +292,47 @@ This tutorial modifies files in the `bst_tutorial/optimistic_locking` directory.
 
 1. Open the file `opt_node_tutorial.h`. We no longer need a shared lock, so modify the lock (line 25) to be of type "mutex" instead of "shared_mutex." 
 
-2. Note that we don't need to make any modifications to the `opt_bst_tutorial.h`, but you may want to look it over to recall what is defined.
+2. Open file `opt_bst_tutorial.h`. We will need to add the definition of a new function: `verifyTraversal`. Specifically, `verifyTraversal` takes in two node pointers (parent and curr) as well as the key that we are trying to insert or remove. Add the following method definition:
+
+`bool verifyTraversal(nodeptr prev, nodeptr curr, int key);`
 
 3. Open file `opt_bst_tutorial.cpp` which is where the remainder of modifications will occur.
 
-__a)__
-create method `verify_traversal`:
+__a)__ First, implement method `verify_traversal`:
+```c++
+bool BST::verifyTraversal(nodeptr parent_check, nodeptr curr_check, int key) {
+    nodeptr prev = root;
+    nodeptr curr = prev->right;
 
-2. Go through each method and remove HoH mutex calls -- to --> only lock prev and curr and then call verify_traversal()
+    // verify that we can still get to prev
+    while (curr->key != SENTINEL) {
+        if (curr->key > key) {
+            prev = curr;
+            curr = curr->left;
+        } else if (curr->key < key) {
+            prev = curr;
+            curr = curr->right;
+        } else
+            break;
+    }
+    
+    if (prev != parent_check) {
+        return false;
+    }
+
+    // due to traversal above, checking if curr = curr_check checks that parent_check still points to curr_check
+    if (curr != curr_check) {
+        return false;
+    }
+    return true;
+}
+```
+
+`verifyTraversal` uses the key passed in to traverse the data structure, and then verifies that the parent and curr pointers match the nodes we locked for the operation.
+
+__b)__ Next, we will go through each method and remove the hand-over-hand locking pattern from the traversal portion of each operation.
+
+Let's begin with the `insert` method. 
 
 ## Authors
 

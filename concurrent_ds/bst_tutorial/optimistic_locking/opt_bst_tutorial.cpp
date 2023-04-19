@@ -11,16 +11,13 @@
 using namespace std;
 
 void addSentinels(Node* node) {
-    Node* left_sentinel = new Node(SENTINEL);
-    Node* right_sentinel = new Node(SENTINEL);
-    node->left = left_sentinel;
-    node->right = right_sentinel;
+    node->left = new Node(SENTINEL);;
+    node->right = new Node(SENTINEL);;
 }
 
 BST::BST() {
-    Node* sentinel_beg = new Node(SENTINEL_BEG);
-    root = sentinel_beg;
-    addSentinels(sentinel_beg);
+    root = new Node(SENTINEL_BEG);
+    addSentinels(root);
 }
 
 /**
@@ -74,10 +71,10 @@ bool BST::insert(int key) {
             return false;
         }
     }
-    // unlcok in shared mode, and re-lock in exclusive
+    // unlock in shared mode, and re-lock in exclusive
     parent->mtx.unlock_shared();
-    curr->mtx.unlock_shared();
     parent->mtx.lock();
+    curr->mtx.unlock_shared();
     curr->mtx.lock();
 
     // curr is now the sentinel that we want to replace with the new node
@@ -89,7 +86,7 @@ bool BST::insert(int key) {
     curr->mtx.unlock();
     parent->mtx.unlock();
     
-    return root;
+    return true;
 }
 
 // return the root if success, NULL if root is null / key not present

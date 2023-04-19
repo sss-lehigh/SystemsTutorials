@@ -25,11 +25,11 @@ public:
     bool contains(int key);
 
     bool verifyTraversal(nodeptr prev, nodeptr curr, int key);
-    void validateDS();
 
     // printing methods - single threaded
     void printLevelOrder();
     void printInOrder();
+    void validateDS();
 };
 
 #endif
