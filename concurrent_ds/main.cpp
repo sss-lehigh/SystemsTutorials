@@ -26,8 +26,8 @@
 
 // configure the following for the machine
 #define PREFETCH_SIZE_WORDS 24
-#define MAX_THREADS 8 
-#define MAX_TID_POW2 8
+#define MAX_THREADS 16
+#define MAX_TID_POW2 16
 
 using namespace std;
 
@@ -412,69 +412,6 @@ bool validateArgs() {
    #endif
     return true;
 }
-
-/////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-//
-// DUMMY TRIAL TO HOPEFULLY FIND BUG
-//
-/////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-
-
-bool insert(int key) {
-    cout << "Attempting to insert key " << key << endl;
-    if (tree->insert(key)) {
-        cout << "Successfully inserted " << key << endl << endl;
-        return true;
-    }
-    return false;
-}
-
-bool remove(int key) {
-    cout << "Attempting to remove key " << key << endl;
-    if (tree->remove(key)) {
-        cout << "Successfully removed " << key << endl << endl;
-        return true;
-    }
-    return false;
-}
-
-bool contains(int key) {
-    cout << "Searching for key " << key << endl;
-    if (tree->contains(key)) {
-        cout << "Successfully found " << key << endl << endl;
-        return true;
-    }
-    return false;
-}
-
-void workload1() {
-    sleep(1);
-    insert(647);
-}
-
-void workload2() {
-    sleep(1);
-
-    
-}
-
-void dummyTrial() {
-    tree = new BST(); // initialize the tree
-
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-//
-// END DUMMY TRIAL
-//
-/////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-
 
 int main(int argc, char *argv[]) {
     TOTAL_THREADS = -1;

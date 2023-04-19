@@ -28,7 +28,7 @@ git clone https://github.com/sss-lehigh/SystemsTutorials.git
 
 1. Send the code to your sunlab account using the `scp` command. From the root directory of this repo (`SystemsTutorials/`), run:
     ```
-    scp concurrent_ds/ <sunlab_username>@sunlab.cse.lehigh.edu:~
+    scp -r concurrent_ds/ <sunlab_username>@sunlab.cse.lehigh.edu:~
     ```
     ***NOTE:*** you can choose to put your code in whichever directory you would like on your sublab account (i.e., doesn't have to be your home directory as in the command).
 
@@ -81,7 +81,7 @@ Before beginning this tutorial, please follow the installation instructions abov
 
 Note that all line numbers mentioned in the tutorials will refer to the respective code as it is listed on Github (i.e., as you begin to edit files, the line numbers mentioned here will no longer match up). Therefore, you likely want to have the Github page up with the respective file you are editing open to make it easier to follow along with the tutorial.
 
-## Pre-Tutorial Reading: Sequential BST Implementation
+## Tutorial 0: Sequential BST Implementation
 
 The sequential implementation of a binary search tree which supports adding, removing, and searching for a key, has been provided in the `bst_tutorial/seq_bst/` directory. Let's begin by understanding this implementation.
 
@@ -101,19 +101,19 @@ This tutorial will edit code in the `concurrent_ds/bst_tutorial/hoh_bst` directo
 
 We are now ready to make modifications to the code.
 
-1. Since we now need the ability to lock and unlock nodes, we must add a mutex field to the definition of a node. This enables fine-grained locking at the node-level via mutexes. Open `hoh_node.h` and change the definition to include a mutex called mtx:
+1. Since we now need the ability to lock and unlock nodes, we must add a mutex field to the definition of a node. This enables fine-grained locking at the node-level via mutexes. We will use a shared lock, which enables the use of a readers/writer lock. Open `hoh_node.h` and change the definition to include a mutex called mtx:
 
     ```c++
     public:
         int key;
         nodeptr left;
         nodeptr right;
-        mutex mtx;
+        shared_mutex mtx;
     ```
 
 2. Briefly open `hoh_bst.h`. You'll note that the only difference from the sequential definition is the definitions `SENTINEL` and `SENTINEL_BEG`. While this is not a requirement for concurrent data structures, in this implementation we will designate sentinel nodes, which are essentially "dummy nodes" at the beginning and end of the data structure. This means that there will be one `SENTINEL_BEG` for the whole tree, and two `SENTINEL`s for each leaf node on the tree.
 
-    Adding "real" sentinel nodes (i.e., instead of simply checking for NULL next pointers) is benecifial because it simplifies corner cases related to ensuring the safety of concurrent operations. For example, without "real" sentinels, if the tree is empty and two concurrent insertions both attempt to insert their element as the root, you would have to add additional logic to deal with such a case since you cannot lock a NULL root.
+    Adding "real" sentinel nodes (i.e., instead of simply checking for NULL next pointers) is beneficial because it simplifies corner cases related to ensuring the safety of concurrent operations. For example, without "real" sentinels, if the tree is empty and two concurrent insertions both attempt to insert their element as the root, you would have to add additional logic to deal with such a case since you cannot lock a NULL root.
 
     Note that the `SENTINEL_BEG` node's left pointer will always be `SENTINEL`, and the right pointer will point to what will be referred to as the "true root" of the tree. A node is identified as a `SENTINEL` if its key is equal to -1 as defined in `hoh_bst.h`.
 
@@ -128,62 +128,76 @@ We are now ready to make modifications to the code.
     }
     ``` 
     
-    Replace the constructor with logic which accomplishes the following: (1) create a node with key `SENTINEL_BEG`, (2) set the root equal to this new node, and (3) call addSentinels(), passing in the new node to create its sentinels. After completing this, the abstract state of the structure looks like the following, where "s_beg" is the beginning sentinel:
+    Replace the constructor with logic which accomplishes the following: (1) create a node with key `SENTINEL_BEG`, (2) set the root equal to this new node, and (3) call addSentinels(), passing in the new node to create its sentinels. After completing this, the abstract state of the structure looks like the following:
     ![Alt text](base_bst.png)
 
-    Note that throughout the tutorial, the beginning sentinel is referred to as the "root" of the tree, and `root->right` is referred to as the "true root" of the tree.
+    ***Note:*** throughout the tutorial, the beginning sentinel is referred to as the "root" of the tree, and `root->right` is referred to as the "true root" of the tree.
 
-4. Let's now modify the `contains()` method. From a high level view, we will need to add the following: a modification for checking if the tree is empty, track the parent of `curr`, add locks such that we lock in a hand-over-hand fashion and have two locks locked at once.
+4. Let's now modify the `contains()` method. From a high level view, we will need to add the following: a modification for checking if the tree is empty, track the parent of `curr`, add locks such that we lock in a hand-over-hand fashion, with at most two locks locked at once. Since we are only ever reading in contains, we will use the lock_shared() method to lock each node as we traverse.
 
-    a) First, let's modify the first if statement to check if the root's right child is a sentinel node, in which case we can immediately return false.
-
-    b) Next, let's add in tracking the parent of curr as we traverse. 
-    
-    First, modify line 17 such that the node pointing to the root is called "parent" instead of "curr". Next, make a new line after line 17 and add: `curr = parent->right`, such that curr now points to the true root.
-
-    Next, for each of the two if statements in the while loop, before modifying curr to point to its left or right child, set parent equal to curr. For example, replace the if statement beginning at line 20 with the following:
+    __a)__ First, let's modify the first if statement to check if the root's right child is a sentinel node, in which case we can immediately return false:
+    ```c++
+    if (root->right->key == SENTINEL)
+        return false;
     ```
+
+    __b)__ Next, let's add in tracking the parent of curr as we traverse. 
+    
+    First, modify line 17 such that the node pointing to the root is called "parent" instead of "curr". Next, make a new line after line 17 and add: `nodeptr curr = parent->right`. "curr" now points to the true root.
+
+    Next, for each of the first two if statements in the while loop, before modifying curr to point to its left or right child, set parent equal to curr. For example, replace the if statement beginning at line 20 with the following:
+    ```c++
     if (curr->key > key) {
         parent = curr;
         curr = curr->left;
     }
     ```
 
-    c) Change the argument in the while loop to check if curr's key is equal to `SENTINEL`.
+    __c)__ Change the argument in the while loop to check if curr's key is not equal to `SENTINEL`.
 
-    d) Finally, we need to add in locking. Immediately after setting `nodeptr parent = root;` before the while loop, create a new line and lock this node. Put together, it should look like this:
-    ```
+    __d)__ Finally, we need to add in locking. Immediately after setting `nodeptr parent = root;` before the while loop, create a new line and lock this node, in shared mode. Put together, it should look like this:
+    ```c++
     nodeptr parent = root;
-    parent->mtx.lock();
+    parent->mtx.lock_shared();
     ```
-    Do the same thing for when we first set curr: add a new line and lock the node.
+    Do the same thing on the next line when we first set curr: add a new line and lock the node in shared mode;
 
     ***Note:*** it is critical that we lock the parent BEFORE setting `curr = parent->right` because another concurrent process may lock the root first and modify the right pointer.
 
     Once it is determined that an operation needs to continue traversing the tree (i.e., we reach one of the first two if statements in the while loop), we can release the lock on prev. In a hand-over-hand fashion, we then want to lock the node which curr will next traverse to. To acomplish this, we can replace the if statement beginning on line 20 with the following:
-    ```
+    ```c++
     if (curr->key > key) {
-        parent->mtx.unlock();
+        parent->mtx.unlock_shared();
         parent = curr;
         curr = curr->left;
-        curr->mtx.lock();
+        curr->mtx.lock_shared();
     }
     ```
     Apply the same logic to the next if statement.
 
-    Lastly, we need to make sure to unlock the nodes before returning. Before returning (true in the while loop, or false outside of it), add lines which unlock the parent and then curr before returning.
+    Lastly, we need to make sure to unlock the nodes before returning. Before returning (true in the while loop, or false outside of it), add lines which unlock the parent and then curr before returning:
+    ```c++
+    parent->mtx.unlock_shared();
+    curr->mtx.unlock_shared();
+    ```
 
 You have now created a HoH locking-based concurrent implementation of a binary search tree contains operation. Both the insert() and remove() methods require traversal of the data structure, and you will be asked to implement the changes we just made to contains() similarly in insert() and remove().
 
 5. Now we will modify the insert() method.
 
-    __a)__ First, remove checking for the existence of the root (lines 32-35). The subsequent lines set parent and curr. Modify these lines to match how we initially set and locked the same two variables in the contains() method.
+    __a)__ First, remove checking for the existence of the root (lines 32-35). The subsequent lines set parent and curr. Modify these lines to match how we initially set and locked the same two variables in the contains() method, also in shared access mode.
 
-    __b)__ Modify the while loop to check for curr's key being equal to `SENTINEL` (the same as in contains()).
+    __b)__ Modify the while loop to check for curr's key being not equal to `SENTINEL` (the same as in contains()).
 
-    __c)__ Modify the contents of the while loop. Specifically, apply the same locking logic used in contains for each if statement (including the "else" statement... what do we need to unlock before returning?).
+    __c)__ Modify the contents of the while loop. Specifically, apply the same locking logic used in contains for each if statement (including the "else" statement... and what do we need to unlock before returning?). All locking should be done in shared access mode.
 
-    __d)__ Recall that if we exit the while loop, it means that the key was not found in the tree, so we can go ahead and insert it. Additionally, curr points to the sentinel node where we should add the key.
+    __d)__ Recall that if we exit the while loop, it means that the key was not found in the tree, and we can insert it. Additionally, curr points to the sentinel node where we should add the key. First, unlock parent and curr from the shared access mode, and re-lock them in exclusive mode since we will now modify them:
+    ```c++
+    parent->mtx.unlock_shared();
+    curr->mtx.unlock_shared();
+    parent->mtx.lock();
+    curr->mtx.lock();
+    ```
     
     We no longer need to create a new node, so you can remove line 56. You can additionally remove lines 57-61.
     
@@ -195,7 +209,7 @@ You have now created a HoH locking-based concurrent implementation of a binary s
     
     __b)__ Modify the if statement after the while loop (line 88) to check if curr's key is `SENTINEL`. Be sure to unlock parent and curr before returning false in this if statement.
 
-    __c)__ Similar to step b, modify the if statement in line 92 to check, in each of the two statements, if the node's key equals `SENTINEL` instead of NULL.
+    __c)__ Similar to step b, modify the if statement in line 92 to check, in each of the two statements, if the node's key does not equal `SENTINEL` instead of NULL.
 
     __d)__ Let's now enter the if block.
     
@@ -231,14 +245,11 @@ You have now created a HoH locking-based concurrent implementation of a binary s
 
 ## Tutorial 2: Optimistic locking [ TUTORIAL WRITE-UP NOT YET COMPLETED ]
 
-TODO: should this tutorial assume that you "learned" things in the previous tutorial, and therefore skip over it? (e.g., adding the mutex field to node.h) (i.e., tutorial 2 "has" to follow tutorial 1), OR should I make it such that you could jump in and do any individual tutorial and it is a stand-alone thing?
-    --> parts may be a bit repetitive tutorial to tutorial, but could be nice to be more modular ??
+This tutorial implements optimistic locking to provide concurrency control for the binary search tree. Unlike hand-over-hand locking, optimistic locking traverses the data structure without using locks, and only locks the nodes that are part of the critical path (i.e., where modifications will occur). However, to avoid safety issues that could be produced from this design, after locking the nodes in the critical path, we must verify that the traversal is still valid before we can continue. Confirming that the traversal is valid means verifying that we can still traverse to the nodes we have locked.
 
-1. First create method `verify_traversal(nodeptr prev, nodeptr curr, bool left)`
+1. First create method `verify_traversal`:
 
 2. Go through each method and remove HoH mutex calls -- to --> only lock prev and curr and then call verify_traversal()
-
-## Tutorial 3: Lock-free BST [ TUTORIAL IMPL & WRITE-UP NOT YET COMPLETED ]
 
 ## Authors
 

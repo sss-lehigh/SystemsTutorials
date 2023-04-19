@@ -1,10 +1,14 @@
 /* 
- * File:   opt_node.h
+ * File:   node.h
  * Author: Olivia Grimes
  *
  * Created on February 2, 2023
  */
 #include <cstddef>
+#include <mutex>
+#include <shared_mutex>
+#include <thread>
+#include <iostream>
 
 using namespace std;
 
@@ -18,6 +22,7 @@ public:
     int key;
     nodeptr left;
     nodeptr right;
+    shared_mutex mtx;
 
     Node(int key)
         : key(key)

@@ -1,6 +1,6 @@
 # Makefile for BST
 
-CC = g++
+CC = g++ -std=c++17
 CFLAGS = -Wall -O3 -g -pthread
 
 all: solution tutorial

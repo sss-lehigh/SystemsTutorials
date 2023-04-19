@@ -6,6 +6,7 @@
  */
 #include <cstddef>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <iostream>
 
@@ -21,7 +22,7 @@ public:
     int key;
     nodeptr left;
     nodeptr right;
-    mutex mtx;
+    shared_mutex mtx;
 
     Node(int key)
         : key(key)

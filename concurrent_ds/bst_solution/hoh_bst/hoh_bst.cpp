@@ -4,24 +4,57 @@
  *
  * Created on February 2, 2023
  */
-
 #include <mutex>
+#include <shared_mutex>
 #include "hoh_bst.h"
 
 using namespace std;
 
-
 void addSentinels(Node* node) {
-    Node* left_sentinel = new Node(SENTINEL);
-    Node* right_sentinel = new Node(SENTINEL);
-    node->left = left_sentinel;
-    node->right = right_sentinel;
+    node->left = new Node(SENTINEL);
+    node->right = new Node(SENTINEL);
 }
 
 BST::BST() {
     Node* sentinel_beg = new Node(SENTINEL_BEG);
     root = sentinel_beg;
     addSentinels(sentinel_beg);
+}
+
+/**
+ * @brief search for a node in the binary search tree
+ * 
+ * @param key to search
+ * @return nodeptr - NULL if present else root
+ */
+bool BST::contains(int key) {
+    if (root->right->key == SENTINEL)
+        return false;
+
+    nodeptr parent = root;
+    parent->mtx.lock_shared();
+    nodeptr curr = parent->right;
+    curr->mtx.lock_shared();
+    while (curr->key != SENTINEL) {
+        if (curr->key > key) {
+            parent->mtx.unlock_shared();
+            parent = curr;
+            curr = curr->left;
+            curr->mtx.lock_shared();
+        } else if (curr->key < key) {
+            parent->mtx.unlock_shared();
+            parent = curr;
+            curr = curr->right;
+            curr->mtx.lock_shared();
+        } else {
+            parent->mtx.unlock_shared();
+            curr->mtx.unlock_shared();
+            return true;
+        }     
+    }
+    parent->mtx.unlock_shared();
+    curr->mtx.unlock_shared();
+    return false;
 }
 
 /**
@@ -33,41 +66,53 @@ BST::BST() {
 bool BST::insert(int key) {
     // lock the sentinel node
     nodeptr parent = root;
-    parent->mtx.lock();
+    parent->mtx.lock_shared();
 
     // add root to the tree
     if (parent->right->key == SENTINEL) {
-        // sentinel_beg's right sentinel becomes the "true root"
-        parent->right->key = key;
-        // add sentinels to the true root
-        addSentinels(parent->right);
+        parent->mtx.unlock_shared();
+        parent->mtx.lock(); // lock in exclusive mode, then determine if we still need to add first element
+        if (parent->right->key == SENTINEL) {
+            // sentinel_beg's right sentinel becomes the "true root"
+            parent->right->key = key;
+            // add sentinels to the true root
+            addSentinels(parent->right);
+            parent->mtx.unlock();
+            return true;
+        }
+        // if another thread beat us to inserting the root, unlock in exclusive mode, and re-lock in shared mode
         parent->mtx.unlock();
-        return true;
+        parent->mtx.lock_shared(); // if we don't return, re-aquire the lock
     }
 
     nodeptr curr = parent->right; // the "true root"
-    curr->mtx.lock();
+    curr->mtx.lock_shared();
 
     // find the key, and it's parent
     while (curr->key != SENTINEL) {
         if (curr->key > key) {
-            parent->mtx.unlock();
+            parent->mtx.unlock_shared();
             parent = curr;
             curr = curr->left;
-            curr->mtx.lock();
+            curr->mtx.lock_shared();
         } else if (curr->key < key) {
-            parent->mtx.unlock();
+            parent->mtx.unlock_shared();
             parent = curr;
             curr = curr->right;
-            curr->mtx.lock();
+            curr->mtx.lock_shared();
         }
         // key is already present
         else {
-            parent->mtx.unlock();
-            curr->mtx.unlock();
+            parent->mtx.unlock_shared();
+            curr->mtx.unlock_shared();
             return false;
         }
     }
+    // unlock in shared mode, and re-lock in exclusive
+    parent->mtx.unlock_shared();
+    parent->mtx.lock();
+    curr->mtx.unlock_shared();
+    curr->mtx.lock();
 
     // curr is now the sentinel that we want to replace with the new node
     curr->key = key;
@@ -83,40 +128,48 @@ bool BST::insert(int key) {
 
 // return the root if success, NULL if root is null / key not present
 bool BST::remove(int key) {
-    nodeptr prev = root;
-    prev->mtx.lock();
+    nodeptr parent = root;
+    parent->mtx.lock_shared();
+
     // if tree is empty
-    if (prev->right->key == SENTINEL) {
-        prev->mtx.unlock();
+    if (parent->right->key == SENTINEL) {
+        parent->mtx.unlock_shared();
         return false;
     }
     // get the "true root"
-    nodeptr curr = prev->right;
-    curr->mtx.lock();
+    nodeptr curr = parent->right;
+    curr->mtx.lock_shared();
 
     // traverse to the node
     while (curr->key != SENTINEL) {
         if (curr->key > key) {
-            prev->mtx.unlock();
-            prev = curr;
+            parent->mtx.unlock_shared();
+            parent = curr;
             curr = curr->left;
-            curr->mtx.lock();
+            curr->mtx.lock_shared();
         }
         else if (curr->key < key) {
-            prev->mtx.unlock();
-            prev = curr;
+            parent->mtx.unlock_shared();
+            parent = curr;
             curr = curr->right;
-            curr->mtx.lock();
+            curr->mtx.lock_shared();
         } else
             break;
     }
 
     // didn't find the node
     if (curr->key == SENTINEL) {
-        prev->mtx.unlock();
-        curr->mtx.unlock();
+        parent->mtx.unlock_shared();
+        curr->mtx.unlock_shared();
         return false;
     }
+    
+    // unlock in shared mode, lock in exclusive mode
+    // TODO: is this safe ??
+    parent->mtx.unlock_shared();
+    parent->mtx.lock();
+    curr->mtx.unlock_shared();
+    curr->mtx.lock();
 
     // at most one child (0-1 children)
     if (curr->left->key == SENTINEL || curr->right->key == SENTINEL) {
@@ -130,18 +183,18 @@ bool BST::remove(int key) {
             newCurr = curr->left;
 
         // check if we are deleting the root
-        if (prev->key == SENTINEL_BEG) {
+        if (parent->key == SENTINEL_BEG) {
             root->right = newCurr;
-            prev->mtx.unlock();
+            parent->mtx.unlock();
             curr->mtx.unlock();
             return true;
         }
 
-        // reset prev accordingly
-        if (curr == prev->left)
-            prev->left = newCurr;
+        // reset parent accordingly
+        if (curr == parent->left)
+            parent->left = newCurr;
         else
-            prev->right = newCurr;
+            parent->right = newCurr;
     }
     // two children
     else {
@@ -174,39 +227,9 @@ bool BST::remove(int key) {
 
         temp->mtx.unlock();
     }
-    prev->mtx.unlock();
+    parent->mtx.unlock();
     curr->mtx.unlock();
     return true;;
-}
-
-bool BST::contains(int key) {
-    if (root->right->key == SENTINEL)
-        return false;
-
-    nodeptr prev = root;
-    prev->mtx.lock();
-    nodeptr curr = prev->right;
-    curr->mtx.lock();
-    while (curr->key != SENTINEL) {
-        if (curr->key > key) {
-            prev->mtx.unlock();
-            prev = curr;
-            curr = curr->left;
-            curr->mtx.lock();
-        } else if (curr->key < key) {
-            prev->mtx.unlock();
-            prev = curr;
-            curr = curr->right;
-            curr->mtx.lock();
-        } else {
-            prev->mtx.unlock();
-            curr->mtx.unlock();
-            return true;
-        }     
-    }
-    prev->mtx.unlock();
-    curr->mtx.unlock();
-    return false;
 }
 
 

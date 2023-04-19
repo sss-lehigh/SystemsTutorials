@@ -4,15 +4,9 @@
  *
  * Created on February 2, 2023
  */
-
 #include <mutex>
-#include <unistd.h>
-#include <iostream>
-#include <cstdlib>
-#include <vector>
-#include <fstream>
-
-#include "opt_bst.h"
+#include <shared_mutex>
+#include "hoh_bst.h"
 
 using namespace std;
 
@@ -29,33 +23,6 @@ BST::BST() {
     addSentinels(sentinel_beg);
 }
 
-bool BST::verifyTraversal(nodeptr prev_check, nodeptr curr_check, int key) {
-    nodeptr prev = root;
-    nodeptr curr = prev->right;
-
-    // verify that we can still get to prev
-    while (curr->key != SENTINEL) {
-        if (curr->key > key) {
-            prev = curr;
-            curr = curr->left;
-        } else if (curr->key < key) {
-            prev = curr;
-            curr = curr->right;
-        } else
-            break;
-    }
-    
-    if (prev != prev_check) {
-        return false;
-    }
-
-    // due to traversal above, checking if curr = curr_check checks that prev_check still points to curr_check
-    if (curr != curr_check) {
-        return false;
-    }
-    return true;
-}
-
 /**
  * @brief insert a node into the binary search tree
  * 
@@ -63,80 +30,111 @@ bool BST::verifyTraversal(nodeptr prev_check, nodeptr curr_check, int key) {
  * @return nodeptr - NULL if present else root
  */
 bool BST::insert(int key) {
+    // lock the sentinel node
     nodeptr parent = root;
+    parent->mtx.lock_shared();
+
+    // add root to the tree
+    if (parent->right->key == SENTINEL) {
+        parent->mtx.unlock_shared();
+        parent->mtx.lock(); // lock in exclusive mode, then determine if we still need to add first element
+        if (parent->right->key == SENTINEL) {
+            // sentinel_beg's right sentinel becomes the "true root"
+            parent->right->key = key;
+            // add sentinels to the true root
+            addSentinels(parent->right);
+            parent->mtx.unlock();
+            return true;
+        }
+        // if another thread beat us to inserting the root, unlock in exclusive mode, and re-lock in shared mode
+        parent->mtx.unlock();
+        parent->mtx.lock_shared(); // if we don't return, re-aquire the lock
+    }
+
     nodeptr curr = parent->right; // the "true root"
+    curr->mtx.lock_shared();
 
     // find the key, and it's parent
     while (curr->key != SENTINEL) {
         if (curr->key > key) {
+            parent->mtx.unlock_shared();
             parent = curr;
             curr = curr->left;
+            curr->mtx.lock_shared();
         } else if (curr->key < key) {
+            parent->mtx.unlock_shared();
             parent = curr;
             curr = curr->right;
+            curr->mtx.lock_shared();
         }
-        else
+        // key is already present
+        else {
+            parent->mtx.unlock_shared();
+            curr->mtx.unlock_shared();
             return false;
+        }
     }
-
-    // NOTE: curr is a sentinel node
+    // unlcok in shared mode, and re-lock in exclusive
+    parent->mtx.unlock_shared();
+    curr->mtx.unlock_shared();
     parent->mtx.lock();
     curr->mtx.lock();
-    if (!verifyTraversal(parent, curr, key)) {
-        parent->mtx.unlock();
-        curr->mtx.unlock();
-        return false;
-    }
 
+    // curr is now the sentinel that we want to replace with the new node
+    curr->key = key;
     // add sentinels to the new node
     addSentinels(curr);
-    // TODO: add memory barrier?
-    // curr is the sentinel that we want to replace with the new node
-    curr->key = key;
 
     // unlock
     curr->mtx.unlock();
     parent->mtx.unlock();
     
-    return true;
+    return root;
 }
 
 // return the root if success, NULL if root is null / key not present
 bool BST::remove(int key) {
     nodeptr prev = root;
-    nodeptr curr = prev->right; // "true root"
-    
+    prev->mtx.lock_shared();
+
     // if tree is empty
-    if (curr->key == SENTINEL) {
+    if (prev->right->key == SENTINEL) {
+        prev->mtx.unlock_shared();
         return false;
     }
+    // get the "true root"
+    nodeptr curr = prev->right;
+    curr->mtx.lock_shared();
 
     // traverse to the node
     while (curr->key != SENTINEL) {
         if (curr->key > key) {
+            prev->mtx.unlock_shared();
             prev = curr;
             curr = curr->left;
+            curr->mtx.lock_shared();
         }
         else if (curr->key < key) {
+            prev->mtx.unlock_shared();
             prev = curr;
             curr = curr->right;
+            curr->mtx.lock_shared();
         } else
             break;
     }
 
     // didn't find the node
     if (curr->key == SENTINEL) {
+        prev->mtx.unlock_shared();
+        curr->mtx.unlock_shared();
         return false;
     }
-
-    // lock & verify traversal
+    
+    // unlock in shared mode, lock in exclusive mode
+    prev->mtx.unlock_shared();
+    curr->mtx.unlock_shared();
     prev->mtx.lock();
     curr->mtx.lock();
-    if (!verifyTraversal(prev, curr, key)) {
-        prev->mtx.unlock();
-        curr->mtx.unlock();
-        return false;
-    }
 
     // at most one child (0-1 children)
     if (curr->left->key == SENTINEL || curr->right->key == SENTINEL) {
@@ -168,7 +166,6 @@ bool BST::remove(int key) {
         nodeptr p = NULL;
         nodeptr temp;
 
-        // TODO: how to adapt this for optimstic locking ??
         // locking here --> at most, one (additional) lock held at a time 
         // compute in-order successor
         temp = curr->right;
@@ -192,11 +189,12 @@ bool BST::remove(int key) {
 
         // change the data in which curr points to
         curr->key = temp->key;
+
         temp->mtx.unlock();
     }
     prev->mtx.unlock();
     curr->mtx.unlock();
-    return true;
+    return true;;
 }
 
 bool BST::contains(int key) {
@@ -204,34 +202,29 @@ bool BST::contains(int key) {
         return false;
 
     nodeptr prev = root;
+    prev->mtx.lock_shared();
     nodeptr curr = prev->right;
-    
+    curr->mtx.lock_shared();
     while (curr->key != SENTINEL) {
         if (curr->key > key) {
+            prev->mtx.unlock_shared();
             prev = curr;
             curr = curr->left;
+            curr->mtx.lock_shared();
         } else if (curr->key < key) {
+            prev->mtx.unlock_shared();
             prev = curr;
             curr = curr->right;
-        } else
-            break;
+            curr->mtx.lock_shared();
+        } else {
+            prev->mtx.unlock_shared();
+            curr->mtx.unlock_shared();
+            return true;
+        }     
     }
-
-    // didn't find the key, return false;
-    if (curr->key == SENTINEL) {
-        return false;
-    }
-
-    // lock prev and curr
-    prev->mtx.lock();
-    curr->mtx.lock();
-    bool ret = verifyTraversal(prev, curr, key);
-
-    // unlock nodes
-    prev->mtx.unlock();
-    curr->mtx.unlock();
-
-    return ret;
+    prev->mtx.unlock_shared();
+    curr->mtx.unlock_shared();
+    return false;
 }
 
 
@@ -301,21 +294,4 @@ void BST::printInOrder() {
     nodeptr curr = root;
     printInOrderHelper(curr);
     cout << std::endl;
-}
-
-void validateInOrder(nodeptr curr, int small, int large) {
-    if (small != -1 && large != -1 && small >= large) {
-        cout << "NOT VALIDATED!!!" << endl;
-    }
-    if (curr->key != -1) {
-        validateInOrder(curr->left, curr->left->key, curr->key);
-        validateInOrder(curr->right, curr->key, curr->right->key);
-    }
-}
-
-void BST::validateDS() {
-    nodeptr curr = root->right;
-    cout << "Validating..." << endl;
-    validateInOrder(curr, -1, curr->key);
-    cout << "Done validating." << endl;
 }
