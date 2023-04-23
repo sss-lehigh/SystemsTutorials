@@ -7,8 +7,8 @@
 #include <string>
 #include <thread>
 
-static unsigned int slowDown = 0;
-static unsigned int threadCount = std::max(std::thread::hardware_concurrency(), 2u) - 1;
+static unsigned int slowDownMilliseconds = 0;
+static unsigned int threadCount = std::max(std::thread::hardware_concurrency(), 2u) - 1; // -1 to leave a thread free for other things on your computer
 
 void parse(const char *arguments[], int argumentCount) {
   static struct option long_options[] = {
@@ -27,13 +27,11 @@ void parse(const char *arguments[], int argumentCount) {
       std::cout << "usage: " << arguments[0] << " [options]" << std::endl;
       std::cout << "options:" << std::endl;
       std::cout << "  -h, --help" << std::endl;
-      std::cout << "  -s, --slow-down=milliseconds"
-                << " (default: " << slowDown << ")" << std::endl;
-      std::cout << "  -t, --thread-count=number"
-                << " (default: " << threadCount << ")" << std::endl;
+      std::cout << "  -s, --slow-down=milliseconds" << " (default: " << slowDownMilliseconds << ")" << std::endl;
+      std::cout << "  -t, --thread-count=number" << " (default: " << threadCount << ")" << std::endl;
       std::exit(EXIT_SUCCESS);
     case 's':
-      slowDown = std::stoi(optarg);
+      slowDownMilliseconds = std::stoi(optarg);
       break;
     case 't':
       threadCount = std::stoi(optarg);

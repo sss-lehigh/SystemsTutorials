@@ -7,15 +7,18 @@
 
 using LinkedList = SortedDoublyLinkedList;
 
-void mutate(/* on */ LinkedList &list, /* slowDown */ unsigned int milliseconds) {
-  switch (randomOperation()) {
+void mutate(LinkedList &list) {
+  auto operation = randomOperation();
+  auto key = randomValue();
+
+  switch (operation) {
   case LinkedList::Operation::Insert:
-    list.insertNode(/* with */ randomValue()); break;
+    list.insertNode(/* with */ key); break;
   case LinkedList::Operation::Delete:
-    list.deleteNode(/* with */ randomValue()); break;
+    list.deleteNode(/* with */ key); break;
   }
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+  std::this_thread::sleep_for(std::chrono::milliseconds(slowDownMilliseconds));
 }
 
 int main(int argumentCount, const char *arguments[]) {
@@ -24,7 +27,7 @@ int main(int argumentCount, const char *arguments[]) {
   LinkedList list{};
 
   while (true) {
-    mutate(list, slowDown);
+    mutate(list);
   }
 
   std::unreachable();

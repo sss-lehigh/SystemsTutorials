@@ -8,7 +8,7 @@ public:
   Node *next = nullptr;
   int key;
 
-  explicit Node(int content) : key(content) {}
+  explicit Node(int key) : key(key) {}
 
   void setPrevious(Node *newPrevious) {
     previous = newPrevious;
