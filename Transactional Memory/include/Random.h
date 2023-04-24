@@ -11,7 +11,7 @@ std::uniform_int_distribution<int> doubleDigitIntegerDistribution(10, 99);
 int randomValue() { return doubleDigitIntegerDistribution(generator); }
 
 #define randomOperation()                                                      \
-  LinkedList::Operation(static_cast<List::Operation::BackingStorage>(          \
+  LinkedList::Operation(static_cast<LinkedList::Operation::BackingStorage>(    \
       operationRawValueDistribution(generator)))
 
 #endif // TRANSACTIONAL_MEMORY_RANDOM_H

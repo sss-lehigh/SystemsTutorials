@@ -4,7 +4,7 @@
 #include "List.h"
 #include <string>
 
-class ConcurrentSortedDoublyLinkedList : public List {
+class ConcurrentSortedDoublyLinkedList : public List<Node> {
 public:
   ConcurrentSortedDoublyLinkedList() : List(){};
 
