@@ -5,7 +5,7 @@
 
 std::random_device randomDevice;
 std::mt19937 generator(randomDevice());
-std::uniform_int_distribution<int> operationRawValueDistribution(0, 2);
+std::uniform_int_distribution<int> operationRawValueDistribution(0, 1);
 std::uniform_int_distribution<int> doubleDigitIntegerDistribution(10, 99);
 
 int randomValue() { return doubleDigitIntegerDistribution(generator); }
