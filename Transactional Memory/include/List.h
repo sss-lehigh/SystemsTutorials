@@ -2,17 +2,19 @@
 #define TRANSACTIONAL_MEMORY_LIST_H
 
 #include <cassert>
+#include <concepts> // std::derived_from
 #include <iostream>
 #include <string>
 #include <optional> // std::optional
 #include "Node.h"
 
+template<std::derived_from<Node> NodeCastable>
 class List {
   friend class SortedDoublyLinkedList;
   friend class ConcurrentSortedDoublyLinkedList;
 
-  Node *head;
-  [[nodiscard]] Node *getTail() const {
+  NodeCastable *head;
+  [[nodiscard]] NodeCastable *getTail() const {
     if (head == nullptr) {
       return nullptr;
     }
@@ -33,7 +35,7 @@ public:
   virtual void deleteNode(/* with */ int key) {
     assert(false && "this method should be overridden by a subclass");
   }
-  [[nodiscard]] virtual std::optional<Node*> containsNode(/* with */ int key) const {
+  [[nodiscard]] virtual std::optional<NodeCastable *> containsNode(/* with */ int key) const {
     assert(false && "this method should be overridden by a subclass");
   }
 
@@ -84,7 +86,7 @@ private:
   };
 
 public:
-  [[nodiscard]] std::string description() const {
+  [[nodiscard]] virtual std::string description() const {
     std::string partialDescription;
     auto currentNode = head;
     if (currentNode != nullptr) {
@@ -97,9 +99,8 @@ public:
     return partialDescription;
   }
 
-  void report(OperationStatus status,
-              /* of */ Operation operation,
-              /* onNodeWith */ int key) const {
+  virtual void report(OperationStatus status, /* of */ Operation operation,
+                      /* onNodeWith */ int key) const {
     switch (status) {
     case OperationStatus::InProgress:
       std::cout << "attempting to " << operation.description()

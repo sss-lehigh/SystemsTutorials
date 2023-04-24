@@ -4,7 +4,7 @@
 #include <string>
 #include "List.h"
 
-class SortedDoublyLinkedList : public List {
+class SortedDoublyLinkedList : public List<Node> {
 public:
   SortedDoublyLinkedList() : List(){};
 

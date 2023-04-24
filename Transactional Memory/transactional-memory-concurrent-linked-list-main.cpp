@@ -8,7 +8,7 @@
 
 using LinkedList = SortedDoublyLinkedList;
 
-void mutate(/* on */ LinkedList &list, /* slowDown */ unsigned int milliseconds) {
+void mutate(LinkedList &list) {
   auto operation = randomOperation();
   auto key = randomValue();
 
@@ -21,7 +21,7 @@ void mutate(/* on */ LinkedList &list, /* slowDown */ unsigned int milliseconds)
     }
   }
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+  std::this_thread::sleep_for(std::chrono::milliseconds(slowDownMilliseconds));
 }
 
 int main(int argumentCount, const char *arguments[]) {
@@ -35,7 +35,7 @@ int main(int argumentCount, const char *arguments[]) {
   for (int i = 0; i < threadCount; ++i) {
     threads.emplace_back([&list] {
       while (true) {
-        /* atomic do */ { mutate(list, slowDown); }
+        /* atomic do */ { mutate(list); }
       }
     });
   }

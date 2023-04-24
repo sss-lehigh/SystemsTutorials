@@ -4,13 +4,13 @@
 #include "List.h"
 #include <string>
 
-class ConcurrentSortedDoublyLinkedList : public List {
+class ConcurrentSortedDoublyLinkedList : public List<Node> {
 public:
   ConcurrentSortedDoublyLinkedList() : List(){};
 
   void insertNode(/* with */ int key) override;
   void deleteNode(/* with */ int key) override;
-  std::optional<Node *> containsNode(/* with */ int key) const override;
+  [[nodiscard]] std::optional<Node *> containsNode(/* with */ int key) const override;
 
   void setHead(Node *newHead) {
     head = newHead;
