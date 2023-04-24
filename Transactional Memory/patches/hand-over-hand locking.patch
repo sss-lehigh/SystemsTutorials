@@ -1,0 +1,249 @@
+Subject: [PATCH] hand-over-hand locking
+
+---
+ .../include/ConcurrentLinkedList.h            |  27 ++-
+ .../src/ConcurrentLinkedList.cpp              | 155 ++++++++++++++----
+ 2 files changed, 149 insertions(+), 33 deletions(-)
+
+diff --git a/Transactional Memory/include/ConcurrentLinkedList.h b/Transactional Memory/include/ConcurrentLinkedList.h
+--- a/Transactional Memory/include/ConcurrentLinkedList.h	
++++ b/Transactional Memory/include/ConcurrentLinkedList.h	
+@@ -4,20 +4,37 @@
+ #include "List.h"
+ #include <string>
+ 
+-class ConcurrentSortedDoublyLinkedList : public List<Node> {
++class LockableNode: public Node {
++  std::mutex _lock;
+ public:
+-  ConcurrentSortedDoublyLinkedList() : List(){};
++  // We use pointers instead of optionals for dramatic effects.
++  LockableNode *previous = nullptr;
++  LockableNode *next = nullptr;
++
++  LockableNode(int key) : Node(key) {}
++
++  void lock() { _lock.lock(); }
++  void unlock() { _lock.unlock(); }
++};
++
++class ConcurrentSortedDoublyLinkedList : public List<LockableNode> {
++  LockableNode *head = new LockableNode(INT_MIN); // sentinel
++public:
++  ConcurrentSortedDoublyLinkedList() : List() {};
+ 
+   void insertNode(/* with */ int key) override;
+   void deleteNode(/* with */ int key) override;
+-  [[nodiscard]] std::optional<Node *> containsNode(/* with */ int key) const override;
++  [[nodiscard]] std::optional<LockableNode *> containsNode(/* with */ int key) const override;
++  [[nodiscard]] bool isEmpty() const override;
++  [[nodiscard]] std::string description() const override;
++  void report(OperationStatus status, /* of */ Operation operation, /* onNodeWith */ int key) const override;
+ 
+-  void setHead(Node *newHead) {
++  void setHead(LockableNode *newHead) {
+     head = newHead;
+     newHead->previous = nullptr;
+   }
+ 
+-  static void setTail(Node *newTail) {
++  static void setTail(LockableNode *newTail) {
+     newTail->next = nullptr;
+   }
+ };
+diff --git a/Transactional Memory/src/ConcurrentLinkedList.cpp b/Transactional Memory/src/ConcurrentLinkedList.cpp
+index 1d482f3..98d1002 100644
+--- a/Transactional Memory/src/ConcurrentLinkedList.cpp	
++++ b/Transactional Memory/src/ConcurrentLinkedList.cpp	
+@@ -3,61 +3,160 @@
+ void ConcurrentSortedDoublyLinkedList::insertNode(int key) {
+   report(OperationStatus::InProgress, Operation::Insert, key);
+ 
+-  if (containsNode(key).has_value()) {
+-    report(OperationStatus::Failure, Operation::Insert, key);
+-    return;
+-  }
+-
+-  auto newNode = new Node(key);
++  auto newNode = new LockableNode(key);
+ 
++  head->lock();
+   if (isEmpty()) {
+     head = newNode;
+     report(OperationStatus::Success, Operation::Insert, key);
+-  } else {
+-    auto currentNode = head;
+-    while (!currentNode->isTail() && currentNode->next->key < key) {
+-      currentNode = currentNode->next;
+-    }
++    head->unlock();
++    return;
++  }
+ 
+-    if (!currentNode->isTail()) { newNode->setNext(currentNode->next); }
+-    newNode->setPrevious(currentNode);
++  auto currentNode = head->next; // we know the list is not empty
++  currentNode->lock();
++  head->unlock();
++  while (!currentNode->isTail() && currentNode->next->key < key) {
++    currentNode->next->lock();
++    currentNode = currentNode->next;
++    currentNode->previous->unlock();
+   }
+ 
++  if (currentNode->key == key) {
++    currentNode->unlock();
++    report(OperationStatus::Failure, Operation::Insert, key);
++    delete newNode;
++    return;
++  }
++
++  if (!currentNode->isTail()) {
++    currentNode->next->lock();
++    newNode->setNext(currentNode->next);
++    currentNode->next->unlock();
++  }
++  newNode->setPrevious(currentNode);
++  currentNode->unlock();
++
+   report(OperationStatus::Success, Operation::Insert, key);
+ }
+ 
+ void ConcurrentSortedDoublyLinkedList::deleteNode(int key) {
+   report(OperationStatus::InProgress, Operation::Delete, key);
+ 
+-  auto optionalNode = containsNode(key);
+-  if (!optionalNode.has_value()) {
++  head->lock();
++
++  if (isEmpty()) {
++    head->unlock();
+     report(OperationStatus::Failure, Operation::Delete, key);
+-  } else {
+-    auto node = optionalNode.value();
+-    if (node->isHead()) {
+-      setHead(node->next);
+-    } else if (node->isTail()) {
+-      setTail(node->previous);
+-    } else {
+-      node->previous->setNext(node->next);
+-    }
+-    delete node;
++    return;
++  }
++
++  auto currentNode = head->next; // we know the list is not empty
++  currentNode->lock();
++  while (!currentNode->isTail() && currentNode->key < key) {
++    currentNode->previous->unlock();
++    currentNode->next->lock();
++    currentNode = currentNode->next;
++    // invariant: `currentNode` and `currentNode->previous` are locked
++  }
+ 
+-    report(OperationStatus::Success, Operation::Delete, key);
++  if (currentNode->key != key) {
++    currentNode->previous->unlock();
++    currentNode->unlock();
++    report(OperationStatus::Failure, Operation::Delete, key);
++    return;
+   }
++
++  if (currentNode->isTail()) {
++    currentNode->previous->next = nullptr;
++    currentNode->previous->unlock();
++  } else {
++    currentNode->next->lock();
++    currentNode->previous->setNext(currentNode->next);
++    currentNode->previous->unlock();
++    currentNode->next->unlock();
++  }
++
++  delete currentNode; // no need to unlock it first
++
++  report(OperationStatus::Success, Operation::Delete, key);
+ }
+ 
+-std::optional<Node *> ConcurrentSortedDoublyLinkedList::containsNode(int key) const {
+-  if (isEmpty()) { return std::nullopt; }
++/// Note: The returned node is locked.
++std::optional<LockableNode *> ConcurrentSortedDoublyLinkedList::containsNode(int key) const {
++  if (isEmpty()) { return std::nullopt; } // no need to lock
+ 
++  head->lock();
+   auto currentNode = head;
+   while (!currentNode->isTail() && currentNode->key < key) {
++    currentNode->next->lock();
+     currentNode = currentNode->next;
++    currentNode->previous->unlock();
+   }
+ 
+   if (currentNode->key == key) {
+     return currentNode;
+   } else {
++    currentNode->unlock();
+     return std::nullopt;
+   }
+ }
++
++/// Note: this method is not thread-safe.
++bool ConcurrentSortedDoublyLinkedList::isEmpty() const {
++  return head->isTail();
++}
++
++std::string ConcurrentSortedDoublyLinkedList::description() const {
++  std::string partialDescription;
++  head->lock();
++  auto currentNode = head->next;
++
++  if (currentNode == nullptr) {
++    head->unlock();
++    return partialDescription;
++  }
++
++  currentNode->lock();
++  head->unlock();
++
++  while (!currentNode->isTail()) {
++    currentNode->next->lock();
++    partialDescription += std::to_string(currentNode->key) + " ⇄ ";
++    currentNode = currentNode->next;
++    currentNode->previous->unlock();
++  }
++
++  partialDescription += std::to_string(currentNode->key);
++  currentNode->unlock();
++  return partialDescription;
++}
++
++void ConcurrentSortedDoublyLinkedList::report(OperationStatus status,
++                                              /* of */ Operation operation,
++                                              /* onNodeWith */ int key) const {
++  static auto outputLock = std::mutex{};
++  std::lock_guard<std::mutex> lock(outputLock);
++
++  switch (status) {
++  case OperationStatus::InProgress:
++    std::cout << "attempting to " << operation.description()
++              << " node with key '" << key << "'"
++              << std::endl; return;
++  case OperationStatus::Success:
++    std::cout << operation.description()
++              << (operation == Operation::Delete ? "d" : "ed")
++              << " node with key '" << key << "'"
++              << std::endl; break;
++  case OperationStatus::Failure:
++    std::cout << "node with key '" << key << "' ";
++    switch (operation) {
++    case Operation::Insert: std::cout << "already exists"; break;
++    case Operation::Delete: std::cout << "not found";      break;
++    }
++    std::cout << std::endl; break;
++  }
++
++  // Making the following line thread-safe is left as an exercise to the reader.
++//  std::cout << "current list: " << description() << std::endl << std::endl;
++}
+-- 
+2.40.0
+
