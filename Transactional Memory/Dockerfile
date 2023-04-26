@@ -3,9 +3,6 @@ LABEL authors="冀卓疌"
 LABEL description="a small transactional memory tutorial"
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
-    apt -qy install apt-utils
-
-RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
     apt -qy lsb-release wget software-properties-common gnupg
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
