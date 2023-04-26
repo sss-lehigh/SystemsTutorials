@@ -93,7 +93,7 @@ different from `linked-list-main.cpp`'s
 using LinkedList = SortedDoublyLinkedList;
 ```
 
-Maybe there is something in `SortedDoublyLinkedList` causing all the problems, so let's take a look at its declaration in  `include/ConcurrentLinkedList.h`, and its member function implementations in `src/LinkedList.cpp`. As with the `main` function file, compare them with their non-concurrent counterpart `include/LinkedList.h` and `src/LinkedList.cpp`. Notice that except for a few naming differences, `ConcurrentSortedDoublyLinkedList` is practically the same as `SortedDoublyLinkedList`. If we look through the function implementations, we encounter this line in `deleteNode`:
+Maybe there is something in `ConcurrentSortedDoublyLinkedList` causing all the problems, so let's take a look at its declaration in  `include/ConcurrentLinkedList.h`, and its member function implementations in `src/ConcurrentLinkedList.cpp`. As with the `main` function file, compare them with their non-concurrent counterpart `include/LinkedList.h` and `src/LinkedList.cpp`. Notice that except for a few naming differences, `ConcurrentSortedDoublyLinkedList` is practically the same as `SortedDoublyLinkedList`. If we look through the function implementations, we encounter this line in `deleteNode`:
 
 ```c++
 delete node;
@@ -104,7 +104,7 @@ Herein lies the root cause of our problems. In the delete operation, we dealloca
 Historically, one popular synchronization primitive is lock. It's also one that you should already be familiar with through previous computer science classes. As an exercise, try to implement a lock-based synchronization for `concurrent-linked-list`. Don't spend too much time on it, though; budget about 10 - 15 minutes, at most. 
 
 > **Note**
-> In your implementation, try to keep the scope of changes within `include/ConcurrentLinkedList.h` and `src/LinkedList.cpp`. If you find it necessary to modify the node type used in the list, declare a new `Node`-derived type and use it in `List`'s generic parameter. 
+> In your implementation, try to keep the scope of changes within `include/ConcurrentLinkedList.h` and `src/ConcurrentLinkedList.cpp`. If you find it necessary to modify the node type used in the list, declare a new `Node`-derived type and use it in `List`'s generic parameter. 
 
 Once you're satisfied with your implementation, or if you've run out of your time budget, move on to the next step.
 
