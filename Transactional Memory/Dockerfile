@@ -7,7 +7,7 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
     apt -qy install lsb-release wget software-properties-common gnupg
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
-    apt -qy install git make cmake ninja-build zlib1g mold && \
+    apt -qy install git make cmake ninja-build zlib1g mold clang lldb lld && \
     bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" && \
     rm -r /var/lib/apt/lists/*
 
