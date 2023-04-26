@@ -21,9 +21,8 @@ RUN cd llvm-project/build/Ninja-Release && \
     -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb;lld;polly;libc;libclc;mlir;pstl" \
     -DLLVM_ENABLE_RUNTIMES="compiler-rt;libc;libcxx;libcxxabi;libunwind" \
     -DLLVM_USE_LINKER=mold \
-    ../../llvm
-
-RUN ninja install
+    ../../llvm && \
+    ninja install
 
 RUN clang --version
 
