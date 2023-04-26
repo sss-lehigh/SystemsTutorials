@@ -3,8 +3,8 @@ LABEL authors="冀卓疌"
 LABEL description="a small transactional memory tutorial"
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
-    apt-get -q update && \
-    apt-get -qy install git make cmake ninja-build zlib1g mold && \
+    apt -q update && \
+    apt -qy install wget git make cmake ninja-build zlib1g mold && \
     bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" && \
     rm -r /var/lib/apt/lists/*
 
@@ -22,3 +22,5 @@ RUN cmake -G Ninja \
 RUN ninja install
 
 RUN clang --version
+
+RUN cd ~ && git clone https://github.com/sss-lehigh/SystemsTutorials.git
