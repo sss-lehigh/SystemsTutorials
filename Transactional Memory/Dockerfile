@@ -4,7 +4,7 @@ LABEL description="a small transactional memory tutorial"
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
     apt -q update &&\
-    apt -qy lsb-release wget software-properties-common gnupg
+    apt -qy install lsb-release wget software-properties-common gnupg
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
     apt -qy install git make cmake ninja-build zlib1g mold && \
