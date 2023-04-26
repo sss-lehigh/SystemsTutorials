@@ -18,8 +18,8 @@ RUN git clone https://github.com/WowbaggersLiquidLunch/llvm-project.git \
 RUN cd llvm-project/build/Ninja-Release && \
     cmake -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
-    -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb;lld;polly;libc;libclc;mlir;openmp;pstl" \
-    -DLLVM_ENABLE_RUNTIMES="compiler-rt;libc;libcxx;libcxxabi;libunwind;openmp" \
+    -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra;lldb;lld;polly;libc;libclc;mlir;pstl" \
+    -DLLVM_ENABLE_RUNTIMES="compiler-rt;libc;libcxx;libcxxabi;libunwind" \
     -DLLVM_USE_LINKER=mold \
     ../../llvm
 
