@@ -3,8 +3,11 @@ LABEL authors="冀卓疌"
 LABEL description="a small transactional memory tutorial"
 
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
+    apt -qy install apt-utils
+
+RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
     apt -q update && \
-    apt -qy install apt-utils wget git make cmake ninja-build zlib1g mold && \
+    apt -qy install wget git make cmake ninja-build zlib1g mold && \
     bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" && \
     rm -r /var/lib/apt/lists/*
 
