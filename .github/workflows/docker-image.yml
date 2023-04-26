@@ -14,11 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file "Transactional Memory/Dockerfile" --tag tm-tutorial:latest -o - . > tutorial.tar
-    - name: Upload the image as an artifact
-      uses: ishworkh/docker-image-artifact-upload@v1
-      with:
-        image: "tm-tutorial:latest"
+      run: docker build . --file "Transactional Memory/Dockerfile" -o - . > tutorial.tar
     - name: Create Release
       uses: ncipollo/release-action@v1.12.0
       with:
