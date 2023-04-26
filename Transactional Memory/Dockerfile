@@ -24,6 +24,8 @@ RUN cd llvm-project/build/Ninja-Release && \
     ../../llvm && \
     ninja install
 
+RUN rm -rf llvm-project
+
 RUN clang --version
 
 RUN cd ~ && git clone https://github.com/sss-lehigh/SystemsTutorials.git
