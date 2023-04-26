@@ -11,9 +11,10 @@ RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \
     bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)" && \
     rm -r /var/lib/apt/lists/*
 
-RUN git clone https://github.com/WowbaggersLiquidLunch/llvm-project.git && \
+RUN git clone https://github.com/WowbaggersLiquidLunch/llvm-project.git \
+    --depth=1 --single-branch --branch=clang-tm-ts && \
     mkdir -p llvm-project/build/Ninja-Release && \
-    cd llvm-project/build/Ninja-Release && \
+    cd llvm-project/build/Ninja-Release
 
 RUN cmake -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
