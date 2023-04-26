@@ -122,23 +122,19 @@ In this step we'll explore how we can use Transactional Memory to achieve synchr
     <p>
         There are many ways to synchronize access to a linked list using locks: a global lock, hand-over-hand locking on each node, a lock table, etc. Under the `patches/` directory are reference implementations of the first 2 designs. Apply each patch to the repository and check it out.
     </p>
-    <pre>
-    <code style="display:block; white-space:pre-wrap">
-    ; git add .
-    ; git stash # stashes your synchronization implementation
-    ; git am path/to/Transactional\ Memory/patches/global\ lock.patch
-    </code>
-    </pre>
+<pre>
+; git add .
+; git stash # stashes your synchronization implementation
+; git am path/to/Transactional\ Memory/patches/global\ lock.patch
+</pre>
     <p>
         This first patch implements a global lock. It's the simpliest synchronization but suffers from poor performance because only one thread can work at a time. In fact it's even worse than the non-concurrent `linked-list`, due to the overhead of contending on and aquiring the lock.
     </p>
-    <pre></pre>
-    <code style="display:block; white-space:pre-wrap">
-    ; git restore .
-    ; git clean -f
-    ; git am path/to/Transactional\ Memory/patches/hand-over-hand\ locking.patch
-    </code>
-    </pre>
+<pre>
+; git restore .
+; git clean -f
+; git am path/to/Transactional\ Memory/patches/hand-over-hand\ locking.patch
+</pre>
     <p>
         This second patch implements a hand-over-hand locking. This is a lot more performant than the global lock, but it also incurs a significantly higher implementation difficulty.
     </p>
