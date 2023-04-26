@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Transactional\ Memory/Dockerfile --tag tm-tutorial:latest -o - . > tutorial.tar
+      run: docker build . --file Transactional\ Memory/Dockerfile --tag tm-tutorial:latest --output type=tar,dest=tutorial.tar
     - name: Upload the image as an artifact	
       uses: ishworkh/docker-image-artifact-upload@v1	
       with:	
